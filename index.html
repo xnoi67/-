@@ -42,6 +42,10 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .fi.l3{border-left-color:#b3141f}.fi.l2{border-left-color:#e8480c}.fi.l1{border-left-color:#c99700}
 .badge{font-size:11px;color:#fff;border-radius:10px;padding:1px 8px;white-space:nowrap}
 .l3 .badge{background:#b3141f}.l2 .badge{background:#e8480c}.l1 .badge{background:#c99700}
+.alt{display:block;width:100%;text-align:left;margin:4px 0;background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:400;font-size:13px}
+.alt.on{border-color:#1a73e8;background:rgba(26,115,232,.12)}
+#rOut h3{font-size:13px;margin:12px 0 4px}
+#rOut .sum{font-size:14px;line-height:1.6;margin:6px 0}
 #gate{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px}
 #gate div{background:var(--panel);border-radius:12px;padding:18px;max-width:430px;width:100%;display:grid;gap:8px}
 #gate p{margin:0;font-size:14px;line-height:1.5}
@@ -64,6 +68,16 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
     <div id="anim"><button id="play" aria-label="play/pause">⏸</button><span id="ftime"></span></div>
   </div>
   <aside>
+    <h2 data-t="routeH"></h2>
+    <div class="form">
+      <input id="rFrom" data-p="rFrom" autocomplete="off">
+      <input id="rTo" data-p="rTo" autocomplete="off">
+      <select id="rMode"><option value="DRIVING" data-t="mDrive"></option><option value="WALKING" data-t="mWalk"></option><option value="TRANSIT" data-t="mTransit"></option></select>
+      <div style="display:flex;gap:6px"><button id="rGo" style="flex:1" data-t="rGo"></button><button class="sec" id="rClear" data-t="rClear"></button></div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="l-traffic"><span data-t="traffic"></span><span class="src">Google</span></label>
+    </div>
+    <div id="rOut"></div>
+
     <h2 data-t="floodH"></h2>
     <div id="fl"><p class="note" data-t="checking"></p></div>
     <div class="form" style="margin-top:6px">
@@ -112,7 +126,7 @@ const GMAPS_KEY="AIzaSyDjjzs3WEJk48sTxxCj0_FRSfaikErB33M";
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const REFRESH_MS=10*60*1000;
+const REFRESH_MS=60*1000;
 
 // ===== ภาษา =====
 const T={th:{
@@ -121,7 +135,7 @@ locate:"📍 ตรวจที่ตำแหน่งของฉัน",tapHi
 emerg:"เบอร์ฉุกเฉิน",official:"ข้อมูลทางการ",
 t191:"191 ตำรวจ",t199:"199 ดับเพลิง",t1669:"1669 การแพทย์ฉุกเฉิน",t1784:"1784 ปภ.",t1129:"1129 PEA ไฟดับ",t1130:"1130 MEA ไฟดับ",
 limit:"ข้อจำกัด: ไฟดับและการขอความช่วยเหลือไม่มีข้อมูลสาธารณะแบบ real time จึงไม่แสดง ให้ดูที่ PEA/MEA และหน่วยงานกู้ภัย การแจ้งเตือนน้ำท่วมคำนวณจากแบบจำลองปริมาณน้ำในแม่น้ำ (Open-Meteo/GloFAS) ไม่ใช่ประกาศทางการ เตือนสึนามิอ้างอิงข้อมูลแผ่นดินไหว USGS กรณีฉุกเฉินให้โทรเบอร์ด้านบนและทำตามประกาศของหน่วยงานรัฐ",
-upd:"อัปเดตล่าสุด",every:"รีเฟรชทุก 10 นาที",checking:"กำลังตรวจสอบ…",nowRain:"ตอนนี้ฝนกำลังตก",noRain:"ตอนนี้ยังไม่มีฝน",next3:"3 ชม.ข้างหน้า",prob:"โอกาสตก",mm:"มม.",fail:"ดึงข้อมูลไม่สำเร็จ",
+upd:"อัปเดตล่าสุด",every:"รีเฟรชทุก 1 นาที",checking:"กำลังตรวจสอบ…",nowRain:"ตอนนี้ฝนกำลังตก",noRain:"ตอนนี้ยังไม่มีฝน",next3:"3 ชม.ข้างหน้า",prob:"โอกาสตก",mm:"มม.",fail:"ดึงข้อมูลไม่สำเร็จ",
 fireN:"จุดไฟใน 24 ชม. ภายในรัศมี ~25 กม.:",fireKey:"ใส่คีย์ FIRMS เพื่อนับจุดไฟตรงนี้",
 tsuT:"⚠ แจ้งเตือน: แผ่นดินไหวที่อาจก่อสึนามิ (24 ชม.ล่าสุด)",tsuOK:"แผ่นดินไหว: ไม่พบเหตุใหญ่ใกล้ไทยใน 24 ชม.",tsuNote:"ข้อมูลจาก USGS ไม่ใช่ประกาศทางการ ตรวจสอบ",mag:"ขนาด",
 rainPop:"ฝนใน 3 ชม.",nogeo:"อ่านตำแหน่งไม่ได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง",outTH:"ตำแหน่งนี้อยู่นอกประเทศไทย",
@@ -129,14 +143,15 @@ floodH:"⚠ แจ้งเตือนน้ำท่วม",noFlood:"ขณะ
 l3:"รุนแรง",l2:"ปานกลาง",l1:"เฝ้าระวัง",rise:"ปริมาณน้ำในแม่น้ำคาดว่าสูงขึ้น",within:"ภายใน 5 วัน",
 adv:"ย้ายของมีค่าขึ้นที่สูง เตรียมไฟฉาย/ยา/น้ำดื่ม ติดตามประกาศ ปภ. 1784",floodBanner:"⚠ แจ้งเตือนน้ำท่วม: ",prov:"จังหวัด (แตะดูรายการ)",
 notifBtn:"🔔 เปิดการแจ้งเตือนบนอุปกรณ์",notifOn:"🔔 เปิดการแจ้งเตือนแล้ว",hub:"ดูแผนที่น้ำท่วมของ Google Flood Hub ↗",
-gateMsg:"หน้านี้ใช้ Google Maps ต้องมี API key (เปิดใช้ Maps JavaScript API) วางคีย์ครั้งเดียว ระบบจะจำไว้ในเครื่อง",gateSave:"บันทึกและเปิดแผนที่",gateBad:"คีย์ใช้ไม่ได้ ตรวจสอบคีย์/การเปิดใช้งาน/การจำกัดโดเมน แล้วลองใหม่"},
+gateMsg:"หน้านี้ใช้ Google Maps ต้องมี API key (เปิดใช้ Maps JavaScript API) วางคีย์ครั้งเดียว ระบบจะจำไว้ในเครื่อง",gateSave:"บันทึกและเปิดแผนที่",gateBad:"คีย์ใช้ไม่ได้ ตรวจสอบคีย์/การเปิดใช้งาน/การจำกัดโดเมน แล้วลองใหม่",
+routeH:"🧭 เส้นทาง / ตรวจระหว่างทาง",rFrom:"จุดเริ่มต้น (เว้นว่าง = ตำแหน่งปัจจุบัน)",rTo:"จุดหมาย: ชื่อสถานที่ / พิกัด / ลิงก์ Google Maps",mDrive:"🚗 ขับรถ",mWalk:"🚶 เดิน",mTransit:"🚌 ขนส่งสาธารณะ",rGo:"ค้นหาเส้นทางและตรวจ",rClear:"ล้าง",traffic:"แสดงสภาพจราจรสด",rHere:"ตำแหน่งปัจจุบัน",rNeedTo:"กรุณาใส่จุดหมาย",rNoPlace:"ไม่พบสถานที่",rShort:"ลิงก์แบบย่อ (maps.app.goo.gl) อ่านพิกัดไม่ได้ กรุณาเปิดลิงก์แล้วคัดลอกลิงก์เต็ม หรือวางพิกัด เช่น 13.75, 100.50",rFail:"คำนวณเส้นทางไม่ได้ ตรวจว่าคีย์เปิดใช้ Directions API (หรือ Routes API) และ Geocoding API แล้ว",rOut:"จุดเริ่มต้นหรือจุดหมายอยู่นอกประเทศไทย",rSum:"ระยะทาง",rEta:"ถึงประมาณ",tr:"จราจร",trNormal:"ปกติ",trNow:"ตอนนี้",trFree:"คล่องตัว",trSlow:"หนาแน่นเล็กน้อย",trJam:"รถติด",trHeavy:"ติดหนัก",trNA:"ไม่มีข้อมูลจราจรสำหรับโหมดนี้ (ดูสีบนแผนที่ได้ถ้าเปิดสภาพจราจรสด)",wH:"ฝน/พายุ/ลม ระหว่างทาง (ตามเวลาที่จะไปถึงแต่ละจุด)",wNone:"ไม่พบฝนตกหนัก พายุ หรือลมแรงตลอดเส้นทางในช่วงเวลาที่เดินทาง",wStorm:"พายุฝนฟ้าคะนอง",wHeavy:"ฝนตกหนัก",wMod:"ฝนปานกลาง",wLight:"ฝนเบา",wGust:"ลมกระโชกแรง",fH:"น้ำท่วม/น้ำหลากใกล้เส้นทาง",fNone:"ไม่พบการแจ้งเตือนน้ำท่วมใกล้เส้นทาง (ตรวจระดับจังหวัด)",aH:"อุบัติเหตุ/ปิดถนน",aNote:"ไม่มีแหล่งข้อมูลอุบัติเหตุสาธารณะแบบ real time ให้ดึงในหน้านี้ เปิดใน Google Maps เพื่อดูเหตุที่ผู้ใช้รายงาน หรือโทร 1193 (ตำรวจทางหลวง) / 1586 (กรมทางหลวง)",aOpen:"เปิดเส้นทางนี้ใน Google Maps ↗",km:"กม.",min:"นาที",hr:"ชม.",near:"ห่าง",goHere:"🧭 ไปที่นี่",viaT:"ผ่าน",altN:"เส้นทาง",at:"ใกล้ จ."},
 en:{
 title:"Thailand Hazard Watch Map",layers:"Layers",radar:"Rain radar (animated)",sat:"Infrared cloud satellite",fire:"Fire hotspots, last 24h",quake:"Earthquakes / tsunami",rain:"Rain next 3h",flood:"Flood alerts",
 locate:"📍 Check my location",tapHint:"Tap anywhere in Thailand to check rain, fire and place name",key:"NASA FIRMS MAP_KEY (free) to count fires where you tap",keyBtn:"Save key",
 emerg:"Emergency numbers",official:"Official sources",
 t191:"191 Police",t199:"199 Fire",t1669:"1669 Medical",t1784:"1784 Disaster (DDPM)",t1129:"1129 PEA outage",t1130:"1130 MEA outage",
 limit:"Limits: no public real-time source for power outages or help requests, so they are not shown; check PEA/MEA and rescue agencies. Flood alerts are model estimates of river discharge (Open-Meteo/GloFAS), not official warnings. Tsunami notice is derived from USGS data. In an emergency call the numbers above and follow government announcements.",
-upd:"Updated",every:"refresh every 10 min",checking:"Checking…",nowRain:"Raining now",noRain:"No rain right now",next3:"Next 3h",prob:"chance",mm:"mm",fail:"Could not fetch data",
+upd:"Updated",every:"refresh every 1 min",checking:"Checking…",nowRain:"Raining now",noRain:"No rain right now",next3:"Next 3h",prob:"chance",mm:"mm",fail:"Could not fetch data",
 fireN:"Fire detections in 24h within ~25 km:",fireKey:"Add a FIRMS key to count fires here",
 tsuT:"⚠ ALERT: earthquake that may cause a tsunami (last 24h)",tsuOK:"Earthquakes: no large event near Thailand in 24h",tsuNote:"USGS data, not an official warning. Check",mag:"M",
 rainPop:"Rain in 3h",nogeo:"Cannot read location. Please allow location access.",outTH:"This location is outside Thailand",
@@ -144,7 +159,8 @@ floodH:"⚠ Flood alerts",noFlood:"No unusual river-surge signals in the 77 prov
 l3:"Severe",l2:"Moderate",l1:"Watch",rise:"River discharge expected to rise",within:"within 5 days",
 adv:"Move valuables up, prepare torch/medicine/water, follow DDPM 1784",floodBanner:"⚠ Flood alert: ",prov:"provinces (tap to view)",
 notifBtn:"🔔 Enable device notifications",notifOn:"🔔 Notifications enabled",hub:"Open Google Flood Hub map ↗",
-gateMsg:"This page uses Google Maps and needs an API key (Maps JavaScript API enabled). Paste it once; it is remembered on this device.",gateSave:"Save and open map",gateBad:"Key rejected. Check the key, API enablement and referrer restrictions, then retry."}};
+gateMsg:"This page uses Google Maps and needs an API key (Maps JavaScript API enabled). Paste it once; it is remembered on this device.",gateSave:"Save and open map",gateBad:"Key rejected. Check the key, API enablement and referrer restrictions, then retry.",
+routeH:"🧭 Route / check along the way",rFrom:"Start (blank = current location)",rTo:"Destination: place name / coordinates / Google Maps link",mDrive:"🚗 Drive",mWalk:"🚶 Walk",mTransit:"🚌 Transit",rGo:"Find route and check",rClear:"Clear",traffic:"Live traffic",rHere:"Current location",rNeedTo:"Please enter a destination",rNoPlace:"Place not found",rShort:"Short links (maps.app.goo.gl) cannot be read. Open the link and copy the full URL, or paste coordinates like 13.75, 100.50",rFail:"Could not compute a route. Check that Directions API (or Routes API) and Geocoding API are enabled for the key.",rOut:"Start or destination is outside Thailand",rSum:"Distance",rEta:"Arrive about",tr:"Traffic",trNormal:"Normal",trNow:"Now",trFree:"Clear",trSlow:"Slightly busy",trJam:"Congested",trHeavy:"Heavy jam",trNA:"No traffic data for this mode (turn on Live traffic to see colors on the map)",wH:"Rain / storm / wind along the way (at your arrival time at each point)",wNone:"No heavy rain, storm or strong wind found along the route for your travel time",wStorm:"Thunderstorm",wHeavy:"Heavy rain",wMod:"Moderate rain",wLight:"Light rain",wGust:"Strong gusts",fH:"Flood near the route",fNone:"No flood alert near the route (province-level check)",aH:"Accidents / road closures",aNote:"No public real-time accident source is available here. Open in Google Maps to see user-reported incidents, or call 1193 (Highway Police) / 1586 (Dept. of Highways)",aOpen:"Open this route in Google Maps ↗",km:"km",min:"min",hr:"h",near:"away",goHere:"🧭 Go here",viaT:"via",altN:"Route",at:"near"}};
 let lang="th";try{lang=localStorage.getItem("lang")||"th"}catch(e){}
 const t=k=>T[lang][k]||k, loc=()=>lang==="th"?"th-TH":"en-GB";
 function applyLang(){
@@ -175,7 +191,7 @@ window.gm_authFailure=()=>{try{localStorage.removeItem("gkey")}catch(e){}gate(tr
 if(key){
   window.initMap=start;
   const s=document.createElement("script");
-  s.src="https://maps.googleapis.com/maps/api/js?key="+encodeURIComponent(key)+"&callback=initMap&language="+lang+"&region=TH&v=weekly";
+  s.src="https://maps.googleapis.com/maps/api/js?key="+encodeURIComponent(key)+"&callback=initMap&language="+lang+"&region=TH&v=weekly&libraries=routes";
   s.async=true;s.onerror=()=>gate(true);document.head.appendChild(s);
 }else gate(false);
 
@@ -198,7 +214,7 @@ class TL{
     const d=doc.createElement("div");d.style.cssText="width:256px;height:256px;position:relative;overflow:hidden;pointer-events:none";
     const n=1<<z;if(c.y<0||c.y>=n)return d;
     const x=((c.x%n)+n)%n,img=doc.createElement("img");img.draggable=false;img.decoding="async";
-    if(z>this.maxZ){const k=z-this.maxZ;if(k>6)return d;const s=1<<k;
+    if(z>this.maxZ){const k=z-this.maxZ;if(k>4)return d;const s=1<<k;
       img.src=this.fn(this.maxZ,x>>k,c.y>>k);
       img.style.cssText=`position:absolute;width:${256*s}px;height:${256*s}px;left:${-(x%s)*256}px;top:${-(c.y%s)*256}px`;
     }else{img.src=this.fn(z,x,c.y);img.style.cssText="width:256px;height:256px"}
@@ -225,21 +241,27 @@ function dot(ll,color,r,html){
 
 // ----- เรดาร์/ดาวเทียม เคลื่อนไหว -----
 let playing=true,step=0,TM={radar:[],sat:[]};
+let busy=false;
+map.addListener("zoom_changed",()=>busy=true);map.addListener("dragstart",()=>busy=true);map.addListener("idle",()=>busy=false);
 function tick(){
+  if(busy||document.hidden)return;   // หยุดเล่นอนิเมชันตอนซูม/ลากแผนที่ เพื่อไม่ให้กระตุก
   let lab="";
   for(const k of ["radar","sat"]){const fr=OV[k];if(!fr.length||!on[k])continue;
     const n=fr.length,i=playing?step%n:n-1;fr.forEach((l,j)=>l.setVis(j===i));
     if(!lab&&TM[k][i])lab=new Date(TM[k][i]*1000).toLocaleTimeString(loc(),{hour:"2-digit",minute:"2-digit"})}
   $("ftime").textContent=lab;if(playing)step++}
-setInterval(tick,800);
+setInterval(tick,1000);
 $("play").onclick=()=>{playing=!playing;$("play").textContent=playing?"⏸":"▶"};
 async function loadSat(){
   try{
     const j=await (await fetch("https://api.rainviewer.com/public/weather-maps.json")).json();
-    const rad=[...j.radar.past.slice(-8),...(j.radar.nowcast||[])];
+    const rad=[...j.radar.past.slice(-5),...(j.radar.nowcast||[]).slice(0,1)];
+    const sig=rad.map(f=>f.path).join()+"|"+((j.satellite&&j.satellite.infrared||[]).slice(-1).map(f=>f.path).join());
+    if(sig===loadSat.sig){note("rv","RainViewer ✓");return}   // ข้อมูลเดิม ไม่ต้องโหลดไทล์ใหม่
+    loadSat.sig=sig;
     TM.radar=rad.map(f=>f.time);
     setOv("radar",rad.map(f=>{const l=new TL((z,x,y)=>`${j.host}${f.path}/256/${z}/${x}/${y}/2/1_1.png`,6,.7);l.setVis(false);return l}));
-    const ir=(j.satellite&&j.satellite.infrared||[]).slice(-8);
+    const ir=(j.satellite&&j.satellite.infrared||[]).slice(-5);
     TM.sat=ir.map(f=>f.time);
     setOv("sat",ir.map(f=>{const l=new TL((z,x,y)=>`${j.host}${f.path}/256/${z}/${x}/${y}/0/0_0.png`,6,.5);l.setVis(false);return l}));
     note("rv","RainViewer ✓");
@@ -254,8 +276,8 @@ async function loadRain(){
     const arr=[];
     (Array.isArray(r)?r:[r]).forEach((d,i)=>{
       const mm=d.hourly.precipitation.reduce((a,b)=>a+(b||0),0),p=Math.max(...d.hourly.precipitation_probability.map(x=>x||0));
-      if(mm<.2&&p<40)return;
-      arr.push(dot({lat:C[i][2],lng:C[i][3]},COL.rain,6+Math.min(mm*2,16),`<b>${esc(nm(C[i]))}</b><br>${t("rainPop")}: ${mm.toFixed(1)} ${t("mm")}<br>${t("prob")} ${p}%`))});
+      if(mm<.5&&!(p>=70&&mm>=.2))return;
+      arr.push(dot({lat:C[i][2],lng:C[i][3]},COL.rain,4+Math.min(mm,5),`<b>${esc(nm(C[i]))}</b><br>${t("rainPop")}: ${mm.toFixed(1)} ${t("mm")}<br>${t("prob")} ${p}%`))});
     setMk("rain",arr);note("rain","Open-Meteo ✓");
   }catch(e){note("rain","Open-Meteo ✗")}
 }
@@ -301,8 +323,8 @@ async function loadFlood(){
       if(base<1||ratio<1.5)return;
       const lv=ratio>=3?3:ratio>=2?2:1,f={c:C[i],ratio,lv};floods.push(f);
       const m=new google.maps.Marker({position:{lat:C[i][2],lng:C[i][3]},zIndex:10+lv,optimized:true,
-        icon:{path:google.maps.SymbolPath.CIRCLE,scale:9+lv*3,fillColor:LV[lv],fillOpacity:.6,strokeColor:LV[lv],strokeWeight:2},
-        label:{text:"!",color:"#fff",fontWeight:"700"}});
+        icon:{path:google.maps.SymbolPath.CIRCLE,scale:6+lv*2,fillColor:LV[lv],fillOpacity:.65,strokeColor:LV[lv],strokeWeight:1.5},
+        label:{text:"!",color:"#fff",fontWeight:"700",fontSize:"11px"}});
       m.addListener("click",()=>showFlood(f));arr.push(m)});
     floods.sort((a,b)=>b.lv-a.lv||b.ratio-a.ratio);
     setMk("flood",arr);renderFlood();pushNotify();
@@ -318,7 +340,7 @@ async function loadQuake(){
       const [lo,la]=f.geometry.coordinates,p=f.properties,m=p.mag||0,ts=p.tsunami===1;
       if(la<-2||la>25||lo<90||lo>112)return;
       const big=(ts&&m>=6.5)||m>=7;if(big)al.push({p,m});
-      arr.push(dot({lat:la,lng:lo},big?"#b3141f":COL.quake,3+m*1.6,`<b>${t("mag")} ${m}</b> ${esc(p.place)}<br>${new Date(p.time).toLocaleString(loc())}${ts?"<br>🌊 tsunami flag":""}`))});
+      arr.push(dot({lat:la,lng:lo},big?"#b3141f":COL.quake,2+m*1.1,`<b>${t("mag")} ${m}</b> ${esc(p.place)}<br>${new Date(p.time).toLocaleString(loc())}${ts?"<br>🌊 tsunami flag":""}`))});
     setMk("quake",arr);
     const b=$("tsu");
     if(al.length){b.style.display="block";
@@ -343,7 +365,7 @@ async function queryPoint(ll){
     h+=(now>0?`<b style="color:#1c78d6">${t("nowRain")}</b> (${now.toFixed(1)} ${t("mm")}/h)`:t("noRain"))+`<br>${t("next3")}: ${mm.toFixed(1)} ${t("mm")} · ${t("prob")} ${p}%`}else h+=t("fail");
   if(f.status==="fulfilled"){const ln=f.value.trim().split("\n");h+=ln[0].startsWith("latitude")?`<br>🔥 ${t("fireN")} <b>${ln.length-1}</b>`:`<br>🔥 ✗`}
   else if(!fk&&on.fire)h+=`<br><small>🔥 ${t("fireKey")}</small>`;
-  iw.setContent(`<div style="font-family:inherit;color:#14212b">${h}</div>`);
+  iw.setContent(`<div style="font-family:inherit;color:#14212b">${h}<br><a href="#" onclick="setDest(${ll.lat},${ll.lng});return false" style="display:inline-block;margin-top:6px;color:#1a73e8;font-weight:600">${t("goHere")}</a></div>`);
 }
 map.addListener("click",e=>queryPoint({lat:e.latLng.lat(),lng:e.latLng.lng()}));
 $("locate").onclick=()=>{
@@ -357,11 +379,142 @@ try{$("firmsKey").value=localStorage.getItem("firmsKey")||""}catch(e){}
 $("lang").onclick=()=>{lang=lang==="th"?"en":"th";try{localStorage.setItem("lang",lang)}catch(e){}location.reload()};
 try{if("Notification" in window&&Notification.permission==="granted")$("notif").textContent=t("notifOn")}catch(e){}
 
+// ทุก 1 นาที: เรดาร์/ดาวเทียม/แผ่นดินไหว  ส่วน Open-Meteo (ฝน 20 นาที, น้ำท่วม 60 นาที) ข้อมูลต้นทางอัปเดตช้ากว่านั้นและมีโควตาจำกัด
+// ===== เส้นทาง + ตรวจจราจร/ฝน/พายุ/น้ำท่วมระหว่างทาง =====
+const traffic=new google.maps.TrafficLayer();
+$("l-traffic").onchange=e=>traffic.setMap(e.target.checked?map:null);
+const RT={lines:[],marks:[],routes:[],sel:0,o:null,d:null,mode:"DRIVING"};
+const hav=(a,b)=>{const r=x=>x*Math.PI/180,dl=r(b.lat-a.lat),dg=r(b.lng-a.lng),h=Math.sin(dl/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dg/2)**2;return 12742000*Math.asin(Math.sqrt(h))};
+const nearProv=p=>{let b=C[0],bd=1e12;C.forEach(c=>{const d=hav(p,{lat:c[2],lng:c[3]});if(d<bd){bd=d;b=c}});return b};
+const fmt=s=>{s=Math.round(s/60);const h=Math.floor(s/60),m=s%60;return (h?h+" "+t("hr")+" ":"")+m+" "+t("min")};
+const hhmm=d=>d.toLocaleTimeString(loc(),{hour:"2-digit",minute:"2-digit"});
+function parseCoord(s){
+  const N="(-?\\d+(?:\\.\\d+)?)";
+  const m=s.match(new RegExp("!3d"+N+"!4d"+N))||s.match(new RegExp("[?&](?:q|ll|query|destination|daddr)="+N+"(?:,|%2C)\\s*"+N,"i"))||s.match(new RegExp("@"+N+","+N))||s.match(new RegExp("^\\(?\\s*"+N+"\\s*[, ]\\s*"+N+"\\s*\\)?$"));
+  if(m){const a=+m[1],b=+m[2];if(Math.abs(a)<=90&&Math.abs(b)<=180)return{lat:a,lng:b}}
+  return null}
+async function geocode(q){
+  try{const r=await new google.maps.Geocoder().geocode({address:q,region:"TH",componentRestrictions:{country:"TH"}});
+    if(r.results&&r.results[0]){const g=r.results[0];return{ll:{lat:g.geometry.location.lat(),lng:g.geometry.location.lng()},label:g.formatted_address}}}catch(e){}
+  try{const r=await (await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=th&accept-language="+lang+"&q="+encodeURIComponent(q))).json();
+    if(r[0])return{ll:{lat:+r[0].lat,lng:+r[0].lon},label:r[0].display_name}}catch(e){}
+  throw new Error(t("rNoPlace")+": "+q)}
+async function resolveLoc(s){
+  s=s.trim();
+  if(/goo\.gl|maps\.app/i.test(s))throw new Error(t("rShort"));
+  const c=parseCoord(s);if(c)return{ll:c,label:c.lat.toFixed(5)+", "+c.lng.toFixed(5)};
+  const pm=s.match(/\/maps\/place\/([^/@?]+)/);
+  return geocode(pm?decodeURIComponent(pm[1].replace(/\+/g," ")):s)}
+const here=()=>new Promise((ok,no)=>{if(!navigator.geolocation)return no(new Error(t("nogeo")));
+  navigator.geolocation.getCurrentPosition(p=>ok({ll:{lat:p.coords.latitude,lng:p.coords.longitude},label:t("rHere")}),()=>no(new Error(t("nogeo"))),{enableHighAccuracy:true,timeout:15000})});
+async function getRoutes(o,d,mode){
+  const lib=await google.maps.importLibrary("routes");
+  try{
+    const req={origin:o,destination:d,travelMode:mode,provideRouteAlternatives:true,region:"th"};
+    if(mode==="DRIVING")req.drivingOptions={departureTime:new Date(),trafficModel:google.maps.TrafficModel.BEST_GUESS};
+    const res=await new lib.DirectionsService().route(req);
+    return res.routes.slice(0,3).map(r=>{const l=r.legs[0];return{name:r.summary,path:r.overview_path.map(p=>({lat:p.lat(),lng:p.lng()})),dist:l.distance.value,dur:l.duration.value,durT:l.duration_in_traffic?l.duration_in_traffic.value:null}});
+  }catch(e1){
+    try{
+      const req={origin:o,destination:d,travelMode:mode,fields:["path","distanceMeters","durationMillis","staticDurationMillis","description"]};
+      if(mode==="DRIVING"){req.routingPreference="TRAFFIC_AWARE";req.computeAlternativeRoutes=true}
+      const {routes}=await lib.Route.computeRoutes(req);
+      return routes.slice(0,3).map(r=>({name:r.description||"",path:r.path.map(p=>({lat:p.lat,lng:p.lng})),dist:r.distanceMeters,dur:(r.staticDurationMillis||r.durationMillis)/1000,durT:mode==="DRIVING"?r.durationMillis/1000:null}));
+    }catch(e2){throw new Error(t("rFail"))}}}
+function wxLevel(s){
+  let lv=0;const tx=[];
+  if([95,96,99].includes(s.code)){lv=3;tx.push(t("wStorm"))}
+  if(s.mm>=7.5){lv=3;tx.push(t("wHeavy")+" "+s.mm.toFixed(1)+" "+t("mm")+"/h")}
+  else if(s.mm>=2.5){lv=Math.max(lv,2);tx.push(t("wMod")+" "+s.mm.toFixed(1)+" "+t("mm")+"/h")}
+  else if(s.mm>=.5||(s.p>=70&&s.mm>=.2)){lv=Math.max(lv,1);tx.push(t("wLight")+" "+s.mm.toFixed(1)+" "+t("mm")+"/h ("+s.p+"%)")}
+  if(s.gust>=60){lv=3;tx.push(t("wGust")+" "+Math.round(s.gust)+" km/h")}
+  else if(s.gust>=45){lv=Math.max(lv,2);tx.push(t("wGust")+" "+Math.round(s.gust)+" km/h")}
+  s.lv=lv;s.tx=tx}
+async function analyze(r){
+  const out=$("rOut"),secs=r.durT||r.dur,now=Date.now(),path=r.path;
+  // จุดตัวอย่างทุก ~15 กม.
+  const cum=[0];for(let i=1;i<path.length;i++)cum.push(cum[i-1]+hav(path[i-1],path[i]));
+  const total=cum[cum.length-1]||1,n=Math.min(20,Math.max(2,Math.ceil(total/15000)+1)),S=[];let j=0;
+  for(let i=0;i<n;i++){const tg=total*i/(n-1);while(j<cum.length-2&&cum[j+1]<tg)j++;
+    const seg=(cum[j+1]-cum[j])||1,f=Math.min(1,Math.max(0,(tg-cum[j])/seg)),a=path[j],b=path[j+1]||a;
+    S.push({lat:a.lat+(b.lat-a.lat)*f,lng:a.lng+(b.lng-a.lng)*f,km:tg/1000,frac:i/(n-1)})}
+  let wxOK=true;
+  try{
+    const la=S.map(s=>s.lat.toFixed(4)).join(","),lo=S.map(s=>s.lng.toFixed(4)).join(",");
+    const w=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&hourly=precipitation,precipitation_probability,weather_code,wind_gusts_10m&forecast_days=2&timezone=Asia%2FBangkok`)).json();
+    const ws=Array.isArray(w)?w:[w];
+    S.forEach((s,i)=>{s.eta=new Date(now+s.frac*secs*1000);
+      const key=new Date(s.eta.getTime()+7*3600e3).toISOString().slice(0,13)+":00",h=ws[i].hourly,k=h.time.indexOf(key);
+      if(k<0){s.mm=0;s.p=0;s.code=0;s.gust=0}else{s.mm=h.precipitation[k]||0;s.p=h.precipitation_probability[k]||0;s.code=h.weather_code[k]||0;s.gust=h.wind_gusts_10m[k]||0}
+      wxLevel(s)});
+  }catch(e){wxOK=false}
+  // น้ำท่วมใกล้เส้นทาง (ระดับจังหวัด รัศมี 35 กม.)
+  const step=Math.max(1,Math.floor(path.length/300)),fl=[];
+  floods.forEach(f=>{let md=1e12;for(let i=0;i<path.length;i+=step){const d=hav(path[i],{lat:f.c[2],lng:f.c[3]});if(d<md)md=d}if(md<=35000)fl.push({f,km:md/1000})});
+  // สรุป
+  const mk=(lv,title,small)=>`<div class="fi l${lv}"><div style="flex:1"><b>${title}</b><small>${small}</small></div><span class="badge">${t("l"+lv)}</span></div>`;
+  let h=RT.routes.map((x,i)=>`<button class="alt${i===RT.sel?" on":""}" data-i="${i}">${t("altN")} ${i+1}${x.name?" · "+t("viaT")+" "+esc(x.name):""} · ${(x.dist/1000).toFixed(0)} ${t("km")} · ${fmt(x.durT||x.dur)}</button>`).join("");
+  h+=`<div class="sum">📏 ${t("rSum")} <b>${(r.dist/1000).toFixed(1)} ${t("km")}</b> · ⏱ <b>${fmt(secs)}</b> · ${t("rEta")} <b>${hhmm(new Date(now+secs*1000))}</b></div>`;
+  h+=`<h3>🚦 ${t("tr")}</h3>`;
+  if(r.durT!=null&&RT.mode==="DRIVING"){
+    const ratio=r.durT/r.dur,lv=ratio>=1.6?3:ratio>=1.3?2:ratio>=1.1?1:0,lab=[t("trFree"),t("trSlow"),t("trJam"),t("trHeavy")][lv],dm=Math.round((r.durT-r.dur)/60);
+    h+=lv?mk(lv,lab,`${t("trNormal")} ${fmt(r.dur)} → ${t("trNow")} ${fmt(r.durT)} (+${dm} ${t("min")})`):`<p class="note">✅ ${lab} · ${t("trNormal")} ${fmt(r.dur)} → ${t("trNow")} ${fmt(r.durT)}</p>`;
+  }else h+=`<p class="note">${t("trNA")}</p>`;
+  h+=`<h3>⛈ ${t("wH")}</h3>`;
+  const bad=S.filter(s=>s.lv>0);
+  if(!wxOK)h+=`<p class="note">${t("fail")}</p>`;
+  else if(!bad.length)h+=`<p class="note">✅ ${t("wNone")}</p>`;
+  else h+=bad.slice(0,10).map(s=>mk(s.lv,`${hhmm(s.eta)} · ${t("at")} ${esc(nm(nearProv(s)))} (${s.km.toFixed(0)} ${t("km")})`,s.tx.join(" · "))).join("");
+  h+=`<h3>🌊 ${t("fH")}</h3>`;
+  h+=fl.length?fl.sort((a,b)=>b.f.lv-a.f.lv).map(x=>mk(x.f.lv,esc(nm(x.f.c)),`${t("rise")} ≈ ${x.f.ratio.toFixed(1)}× · ${t("near")} ${x.km.toFixed(0)} ${t("km")}`)).join(""):`<p class="note">✅ ${t("fNone")}</p>`;
+  h+=`<h3>🚧 ${t("aH")}</h3><p class="note">${t("aNote")}</p>`;
+  h+=`<a class="note" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/dir/?api=1&origin=${RT.o.ll.lat},${RT.o.ll.lng}&destination=${RT.d.ll.lat},${RT.d.ll.lng}&travelmode=${RT.mode.toLowerCase()}">${t("aOpen")}</a>`;
+  out.innerHTML=h;
+  out.querySelectorAll(".alt").forEach(b=>b.onclick=()=>{RT.sel=+b.dataset.i;showRoute(false)});
+  // หมุดจุดเสี่ยงบนแผนที่
+  bad.forEach(s=>{const m=new google.maps.Marker({position:s,map,zIndex:15,icon:{path:google.maps.SymbolPath.CIRCLE,scale:7,fillColor:LV[s.lv],fillOpacity:.9,strokeColor:"#fff",strokeWeight:2}});
+    m.addListener("click",()=>{iw.setContent(`<div style="color:#14212b"><b>${hhmm(s.eta)} · ${esc(nm(nearProv(s)))}</b><br>${s.tx.map(esc).join("<br>")}</div>`);iw.open({map,anchor:m})});RT.marks.push(m)});
+}
+async function showRoute(first){
+  RT.lines.forEach(l=>l.setMap(null));RT.marks.forEach(m=>m.setMap(null));RT.lines=[];RT.marks=[];
+  const rs=RT.routes,r=rs[RT.sel],bounds=new google.maps.LatLngBounds();
+  rs.forEach((x,i)=>{if(i===RT.sel)return;const pl=new google.maps.Polyline({path:x.path,map,strokeColor:"#8a97a3",strokeWeight:5,zIndex:1});pl.addListener("click",()=>{RT.sel=i;showRoute(false)});RT.lines.push(pl)});
+  RT.lines.push(new google.maps.Polyline({path:r.path,map,strokeColor:"#ffffff",strokeWeight:9,zIndex:2,clickable:false}));
+  RT.lines.push(new google.maps.Polyline({path:r.path,map,strokeColor:"#1a73e8",strokeWeight:6,zIndex:3,clickable:false}));
+  RT.marks.push(new google.maps.Marker({position:RT.o.ll,map,label:"A",zIndex:20}),new google.maps.Marker({position:RT.d.ll,map,label:"B",zIndex:20}));
+  if(first){r.path.forEach(p=>bounds.extend(p));map.fitBounds(bounds,50)}
+  await analyze(r);
+}
+async function goRoute(){
+  const out=$("rOut");out.innerHTML=`<p class="note">${t("checking")}</p>`;
+  try{
+    const toS=$("rTo").value.trim();if(!toS)throw new Error(t("rNeedTo"));
+    const fromS=$("rFrom").value.trim();
+    const [o,d]=await Promise.all([fromS?resolveLoc(fromS):here(),resolveLoc(toS)]);
+    if(!inTH(o.ll.lat,o.ll.lng)||!inTH(d.ll.lat,d.ll.lng))throw new Error(t("rOut"));
+    RT.o=o;RT.d=d;RT.mode=$("rMode").value;
+    RT.routes=await getRoutes(o.ll,d.ll,RT.mode);
+    if(!RT.routes.length)throw new Error(t("rFail"));
+    RT.sel=0;await showRoute(true);
+    if(RT.mode==="DRIVING"&&!$("l-traffic").checked){$("l-traffic").checked=true;traffic.setMap(map)}
+  }catch(e){out.innerHTML=`<p class="note" style="color:#b3141f">${esc(e.message||e)}</p>`}
+}
+$("rGo").onclick=goRoute;
+["rFrom","rTo"].forEach(id=>$(id).addEventListener("keydown",e=>{if(e.key==="Enter")goRoute()}));
+$("rClear").onclick=()=>{RT.lines.forEach(l=>l.setMap(null));RT.marks.forEach(m=>m.setMap(null));RT.lines=[];RT.marks=[];RT.routes=[];$("rOut").innerHTML="";$("rFrom").value="";$("rTo").value=""};
+window.setDest=(la,lo)=>{$("rTo").value=la.toFixed(5)+", "+lo.toFixed(5);iw.close();goRoute()};
+
+let lastRain=0,lastFlood=0;
 async function refresh(){
-  await Promise.all([loadFlood(),loadSat(),loadRain(),loadQuake()]);
+  if(document.hidden)return;
+  const n=Date.now(),jobs=[loadSat(),loadQuake()];
+  if(n-lastRain>20*60*1000){lastRain=n;jobs.push(loadRain())}
+  if(n-lastFlood>60*60*1000){lastFlood=n;jobs.push(loadFlood())}
+  await Promise.all(jobs);
   $("stamp").textContent=t("upd")+" "+new Date().toLocaleTimeString(loc())+" · "+t("every");
 }
 refresh();setInterval(refresh,REFRESH_MS);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)refresh()});
 }
 </script>
 </body>
