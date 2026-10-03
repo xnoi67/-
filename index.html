@@ -54,6 +54,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
       <label><input type="checkbox" id="l-rep" checked><span class="dot" style="background:var(--help)"></span>รายงานจากประชาชน<span class="src">ในเครื่อง/ระบบกลาง</span></label>
     </div>
     <div class="form" style="margin-top:6px">
+      <button id="locate">📍 ดูฝนที่ตำแหน่งของฉัน</button>
+      <p class="note" style="margin:0">หรือแตะที่จุดใดก็ได้บนแผนที่เพื่อดูฝนที่จุดนั้น</p>
       <input id="firmsKey" placeholder="NASA FIRMS MAP_KEY (ฟรี) สำหรับชั้นไฟไหม้" autocomplete="off">
       <button class="sec" id="saveKey">บันทึกคีย์ และโหลดจุดความร้อน</button>
     </div>
@@ -96,7 +98,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 // ถ้ามีระบบหลังบ้าน (เช่น Supabase/Firebase/เซิร์ฟเวอร์ตัวเอง) ใส่ URL ที่นี่ เพื่อให้รายงานเห็นร่วมกันแบบ real time
 // GET  → คืน JSON [{type,lat,lon,place,note,t}]   POST → รับ JSON 1 รายการ
 const REPORT_API = "";
-const REFRESH_MS = 5 * 60 * 1000;
+const REFRESH_MS = 10 * 60 * 1000;
 
 const CITIES=[["กรุงเทพฯ",13.75,100.5],["เชียงใหม่",18.79,98.98],["เชียงราย",19.91,99.83],["แม่ฮ่องสอน",19.3,97.97],["น่าน",18.78,100.78],["พิษณุโลก",16.82,100.26],["นครสวรรค์",15.7,100.14],["ขอนแก่น",16.44,102.83],["อุดรธานี",17.41,102.79],["นครราชสีมา",14.98,102.1],["อุบลราชธานี",15.24,104.85],["สกลนคร",17.16,104.15],["อยุธยา",14.35,100.57],["ลพบุรี",14.8,100.65],["กาญจนบุรี",14.0,99.55],["เพชรบุรี",13.11,99.94],["ชลบุรี",13.36,100.98],["ระยอง",12.68,101.28],["จันทบุรี",12.61,102.1],["ประจวบฯ",11.81,99.8],["สุราษฎร์ธานี",9.14,99.33],["นครศรีธรรมราช",8.43,99.96],["ภูเก็ต",7.88,98.39],["กระบี่",8.09,98.91],["หาดใหญ่",7.01,100.47],["นราธิวาส",6.43,101.82],["ยะลา",6.54,101.28],["ตรัง",7.56,99.61],["ชุมพร",10.49,99.18],["ตาก",16.88,99.13],["สุโขทัย",17.01,99.82],["แพร่",18.14,100.14],["ลำปาง",18.29,99.49],["เลย",17.49,101.72],["นครพนม",17.41,104.78],["บุรีรัมย์",14.99,103.1],["สุรินทร์",14.88,103.49],["สระแก้ว",13.82,102.07],["สุพรรณบุรี",14.47,100.12],["ราชบุรี",13.53,99.82],["นครปฐม",13.82,100.06]];
 const COLORS={power:"#c99700",help:"#c0245a",flood:"#0b8f8a",fire:"#e8480c",rain:"#1c78d6"};
@@ -109,7 +111,7 @@ L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_M
 const G={radar:L.layerGroup(),rain:L.layerGroup(),flood:L.layerGroup(),fire:L.layerGroup(),rep:L.layerGroup()};
 Object.entries(G).forEach(([k,g])=>{$("l-"+k).checked&&g.addTo(map);$("l-"+k).onchange=e=>e.target.checked?g.addTo(map):map.removeLayer(g)});
 const stat={};
-function setStamp(){const t=new Date().toLocaleTimeString("th-TH");$("stamp").textContent="อัปเดตล่าสุด "+t+" · รีเฟรชอัตโนมัติทุก 5 นาที"}
+function setStamp(){const t=new Date().toLocaleTimeString("th-TH");$("stamp").textContent="อัปเดตล่าสุด "+t+" · รีเฟรชอัตโนมัติทุก 10 นาที"}
 function note(k,v){stat[k]=v;$("st").textContent=Object.values(stat).join(" · ")}
 const mkDot=(ll,c,r,html)=>L.circleMarker(ll,{radius:r,color:c,weight:2,fillColor:c,fillOpacity:.45}).bindPopup(html);
 
@@ -119,7 +121,7 @@ async function loadRadar(){
     const j=await (await fetch("https://api.rainviewer.com/public/weather-maps.json")).json();
     const f=(j.radar.nowcast&&j.radar.nowcast.length?j.radar.nowcast:j.radar.past).slice(-1)[0];
     G.radar.clearLayers();
-    L.tileLayer(j.host+f.path+"/256/{z}/{x}/{y}/2/1_1.png",{opacity:.6,zIndex:5}).addTo(G.radar);
+    L.tileLayer(j.host+f.path+"/256/{z}/{x}/{y}/2/1_1.png",{opacity:.6,zIndex:5,maxNativeZoom:6,maxZoom:18}).addTo(G.radar);
     note("เรดาร์ ✓","เรดาร์ ✓");
   }catch(e){note("เรดาร์","เรดาร์ ✗")}
 }
@@ -195,7 +197,7 @@ async function loadReps(){
 }
 $("pick").onclick=()=>{pickMode=true;$("rhint").textContent="แตะบนแผนที่เพื่อปักหมุดตำแหน่งเหตุการณ์";};
 map.on("click",e=>{
-  if(!pickMode)return;pickMode=false;picked=e.latlng;
+  if(!pickMode){queryPoint(e.latlng);return}pickMode=false;picked=e.latlng;
   pin&&map.removeLayer(pin);pin=L.marker(e.latlng).addTo(map);
   $("rhint").textContent=`เลือกตำแหน่งแล้ว (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`;
 });
@@ -209,6 +211,25 @@ $("rsend").onclick=async()=>{
   loadReps();
 };
 
+// ===== ดูฝนที่จุดใดก็ได้ / ตำแหน่งของฉัน =====
+async function queryPoint(ll){
+  const pop=L.popup().setLatLng(ll).setContent("กำลังตรวจสอบฝน…").openOn(map);
+  try{
+    const r=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${ll.lat}&longitude=${ll.lng}&current=precipitation,rain&hourly=precipitation,precipitation_probability&forecast_hours=3&timezone=Asia%2FBangkok`)).json();
+    const now=r.current.precipitation||0;
+    const mm=r.hourly.precipitation.reduce((a,b)=>a+(b||0),0);
+    const p=Math.max(...r.hourly.precipitation_probability.map(x=>x||0));
+    const s=now>0?`<b style="color:#1c78d6">ตอนนี้ฝนกำลังตก</b> (${now.toFixed(1)} มม./ชม.)`:"ตอนนี้ยังไม่มีฝน";
+    pop.setContent(`${s}<br>3 ชม.ข้างหน้า: ${mm.toFixed(1)} มม. · โอกาสตก ${p}%<br><small>${ll.lat.toFixed(3)}, ${ll.lng.toFixed(3)} · ข้อมูลจากแบบจำลอง อาจคลาดเคลื่อน เทียบกับเรดาร์ประกอบ</small>`);
+  }catch(e){pop.setContent("ดึงข้อมูลฝนไม่สำเร็จ ลองใหม่อีกครั้ง")}
+}
+$("locate").onclick=()=>{
+  if(!navigator.geolocation){alert("เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง");return}
+  navigator.geolocation.getCurrentPosition(p=>{
+    const ll=L.latLng(p.coords.latitude,p.coords.longitude);
+    map.setView(ll,10);queryPoint(ll);
+  },()=>alert("ไม่สามารถอ่านตำแหน่งได้ กรุณาอนุญาตการเข้าถึงตำแหน่งในเบราว์เซอร์"),{enableHighAccuracy:true,timeout:15000});
+};
 async function refresh(){await Promise.all([loadRadar(),loadRain(),loadFlood(),loadFire(),loadReps()]);setStamp()}
 refresh();setInterval(refresh,REFRESH_MS);
 </script>
