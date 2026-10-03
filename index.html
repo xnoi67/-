@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>แผนที่เฝ้าระวังภัย ประเทศไทย</title>
+<title>Alert Thailand</title>
 <link rel="preconnect" href="https://maps.googleapis.com">
 <link rel="preconnect" href="https://maps.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
@@ -77,83 +77,90 @@ details.adv[open] summary{border-bottom:1px solid var(--line);margin-bottom:8px}
 #legend{position:absolute;left:10px;top:12px;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:15px;line-height:1.4;max-width:min(560px,calc(100% - 70px));box-shadow:0 1px 4px rgba(0,0,0,.25)}
 .fl-lbl{text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 5px #fff;white-space:nowrap}
 @media(max-width:760px){h1{font-size:17px}#legend{font-size:13px}}
-#space{position:fixed;inset:0;z-index:60;background:#000;transition:opacity .9s ease}#space.hide{opacity:0;pointer-events:none}
+#space{position:fixed;inset:0;z-index:60;background:#000;will-change:opacity}
 #sc{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #spTop{position:absolute;top:18px;left:0;right:0;text-align:center;color:#fff;font-size:22px;font-weight:700;text-shadow:0 0 12px #4af;pointer-events:none}
 #spTop small{display:block;font-size:14px;font-weight:400;opacity:.8;margin-top:4px}
 #spBtns{position:absolute;left:0;right:0;bottom:28px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:0 12px}
 #spBtns button{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.45);backdrop-filter:blur(6px);border-radius:28px;padding:12px 22px;font-size:18px}
 .acts #aCam{background:#7b3fc4}.acts #aCam.on{background:#4a1f8a;outline:3px solid #c9a7ff}
+#camPanel{position:fixed;inset:0;z-index:70;background:var(--panel);display:none;flex-direction:column}#camPanel.on{display:flex}
+#camPanel .ch2{display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}#camPanel iframe{flex:1;border:0;width:100%;background:#fff}
 </style>
 </head>
 <body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <div id="space"><canvas id="sc"></canvas>
-  <div id="spTop">Thailand Hazard Watch<small data-t="spHint"></small></div>
-  <div id="spBtns"><button id="spGo" data-t="goTH"></button><button id="spSkip" data-t="skipSp"></button></div>
+  <div id="spTop">Alert Thailand<small data-t="spHint"></small></div>
+  <div id="spBtns"><button id="spGo" data-t="goTH"></button></div>
 </div>
+<div id="camPanel"><div class="ch2"><b data-t="camTitle"></b><a id="camOpen" target="_blank" rel="noopener noreferrer" data-t="camOpen"></a><span class="note" data-t="camHint"></span><button id="camClose" class="sec" data-t="camClose" style="margin-left:auto"></button></div><iframe id="camFr" allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe></div>
 <script>
 (function(){
 const sp=document.getElementById("space");
 if(!window.THREE){sp.style.display="none";window.openSpace=()=>{};return}
-const cv=document.getElementById("sc"),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});
-R.setPixelRatio(Math.min(devicePixelRatio,2));
+const cv=document.getElementById("sc"),mob=matchMedia("(pointer:coarse)").matches;
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:!mob,powerPreference:"high-performance"});
+R.setPixelRatio(Math.min(devicePixelRatio,mob?1.5:2));
 const S=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,1,.1,1000);
 function rs(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
 addEventListener("resize",rs);rs();
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ll2v=(la,lo,r)=>{const p=(90-la)*Math.PI/180,q=(lo+180)*Math.PI/180;return new THREE.Vector3(-r*Math.sin(p)*Math.cos(q),r*Math.cos(p),r*Math.sin(p)*Math.sin(q))};
 // stars
-const N=4500,pos=new Float32Array(N*3),sg=new THREE.BufferGeometry();
+const N=mob?2500:4000,pos=new Float32Array(N*3),sg=new THREE.BufferGeometry();
 for(let i=0;i<N;i++){const r=320+Math.random()*80,a=Math.random()*6.283,b=Math.acos(2*Math.random()-1);pos.set([r*Math.sin(b)*Math.cos(a),r*Math.cos(b),r*Math.sin(b)*Math.sin(a)],i*3)}
 sg.setAttribute("position",new THREE.BufferAttribute(pos,3));
 S.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:false})));
-// lights + sun
+// sun
 const L=new THREE.DirectionalLight(0xfff2dd,1.7);L.position.set(50,10,25);S.add(L,new THREE.AmbientLight(0x334466,.7));
 const gc=document.createElement("canvas");gc.width=gc.height=128;const g=gc.getContext("2d"),gr=g.createRadialGradient(64,64,0,64,64,64);
 gr.addColorStop(0,"#fff");gr.addColorStop(.25,"rgba(255,220,120,.9)");gr.addColorStop(1,"rgba(255,160,40,0)");g.fillStyle=gr;g.fillRect(0,0,128,128);
-const sun=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(gc),blending:THREE.AdditiveBlending,depthWrite:false}));sun.scale.set(70,70,1);sun.position.set(95,22,-90);S.add(sun);
+const sun=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(gc),blending:THREE.AdditiveBlending,depthWrite:false}));sun.scale.set(80,80,1);sun.position.set(95,22,-90);S.add(sun);
 // earth
 const eY=new THREE.Group(),eP=new THREE.Group();eP.add(eY);S.add(eP);
-const earth=new THREE.Mesh(new THREE.SphereGeometry(5,72,72),new THREE.MeshPhongMaterial({color:0x2a6fb0,shininess:12,specular:0x223344}));
+const earth=new THREE.Mesh(new THREE.SphereGeometry(5,mob?48:72,mob?48:72),new THREE.MeshPhongMaterial({color:0x2a6fb0,shininess:12,specular:0x223344}));
 new THREE.TextureLoader().setCrossOrigin("anonymous").load("https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg",tx=>{earth.material.map=tx;earth.material.color.set(0xffffff);earth.material.needsUpdate=true});
 eY.add(earth);
-const atm=new THREE.Mesh(new THREE.SphereGeometry(5.35,64,64),new THREE.ShaderMaterial({transparent:true,side:THREE.BackSide,blending:THREE.AdditiveBlending,depthWrite:false,
+S.add(new THREE.Mesh(new THREE.SphereGeometry(5.35,48,48),new THREE.ShaderMaterial({transparent:true,side:THREE.BackSide,blending:THREE.AdditiveBlending,depthWrite:false,
  vertexShader:"varying vec3 n;void main(){n=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
- fragmentShader:"varying vec3 n;void main(){float i=pow(.72-dot(n,vec3(0.,0.,1.)),3.);gl_FragColor=vec4(.3,.6,1.,1.)*i;}"}));S.add(atm);
-// Thailand pin
+ fragmentShader:"varying vec3 n;void main(){float i=pow(.72-dot(n,vec3(0.,0.,1.)),3.);gl_FragColor=vec4(.3,.6,1.,1.)*i;}"})));
 const TH=ll2v(13.5,101,5.03),pin=new THREE.Mesh(new THREE.SphereGeometry(.07,16,16),new THREE.MeshBasicMaterial({color:0xff3b30}));pin.position.copy(TH);eY.add(pin);
 const ring=new THREE.Mesh(new THREE.RingGeometry(.1,.14,32),new THREE.MeshBasicMaterial({color:0xff3b30,transparent:true,side:THREE.DoubleSide}));ring.position.copy(TH);ring.lookAt(TH.clone().multiplyScalar(2));eY.add(ring);
-// moon + planets (stylised orbits)
-const moon=new THREE.Mesh(new THREE.SphereGeometry(1.3,32,32),new THREE.MeshPhongMaterial({color:0xaaaaaa,shininess:2}));S.add(moon);
-const PL=[[1.8,0xc1440e,38,.12,1],[4.2,0xd8b88a,62,.06,3],[3.2,0xe3cf9f,88,.04,5,1],[2.4,0x4b70dd,112,.03,2]].map(([r,c,o,v,ph,rg])=>{
-  const m=new THREE.Mesh(new THREE.SphereGeometry(r,32,32),new THREE.MeshPhongMaterial({color:c,shininess:4}));
-  if(rg){const rn=new THREE.Mesh(new THREE.RingGeometry(r*1.4,r*2.2,64),new THREE.MeshBasicMaterial({color:0xcdb98a,side:THREE.DoubleSide,transparent:true,opacity:.7}));rn.rotation.x=1.2;m.add(rn)}
-  S.add(m);return{m,o,v,ph}});
-// state
-let yaw=2.4,pit=.3,ty=yaw,tp=pit,dist=36,td=36,fly=false,fading=false,drag=false,lx=0,ly=0,touched=false,run=true,t0=performance.now(),mt=0;
-const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+// ระยะกล้องที่ "ขนาดบนจอ" ตรงกับแผนที่ Google (ไว้ครอสเฟดให้ต่อกันพอดี)
+let dF=7.4;
+function calcDF(){const m=window.AT&&AT.map,z=m&&m.getZoom();if(z)dF=clamp(5+innerHeight*152.2/Math.pow(2,z)/1055,5.8,12)}
+const aTH=Math.atan2(-TH.x,TH.z),pTH=Math.atan2(TH.y,Math.hypot(TH.x,TH.z));
+let yaw=2.4,pit=.3,ty=yaw,tp=pit,dist=36,td=36,fly=false,out=false,drag=false,lx=0,ly=0,touched=false,run=true,op=1,t0=performance.now(),mt=0;
 function loop(now){
   if(!run)return;requestAnimationFrame(loop);
   const dt=Math.min(.05,(now-t0)/1000);t0=now;mt+=dt;
-  if(!drag&&!fly)ty+=dt*.06;
-  const k=fly?2.2:6;yaw+=(ty-yaw)*Math.min(1,dt*k);pit+=(tp-pit)*Math.min(1,dt*k);dist+=(td-dist)*Math.min(1,dt*(fly?1.8:5));
+  if(!drag&&!fly)ty+=dt*.05;
+  const k=fly?2.2:6;yaw+=(ty-yaw)*Math.min(1,dt*k);pit+=(tp-pit)*Math.min(1,dt*k);dist+=(td-dist)*Math.min(1,dt*((fly||out)?1.7:5));
+  if(out&&dist>dF+6)out=false;
   eY.rotation.y=yaw;eP.rotation.x=pit;cam.position.set(0,0,dist);
-  moon.position.set(Math.cos(mt*.35)*12,Math.sin(mt*.35)*1.6,Math.sin(mt*.35)*12);moon.rotation.y+=dt*.1;
-  PL.forEach(p=>{const a=p.ph+mt*p.v;p.m.position.set(Math.cos(a)*p.o,Math.sin(a)*p.o*.12,-20+Math.sin(a)*p.o*.35);p.m.rotation.y+=dt*.2});
   const q=(mt%1.6)/1.6;ring.scale.setScalar(1+q*2.2);ring.material.opacity=1-q;
   R.render(S,cam);
-  if(fly&&!fading&&dist<td+1.3){fading=true;sp.classList.add("hide");setTimeout(()=>{run=false;sp.style.display="none"},1000)}
+  const o=clamp((dist-dF)/2.4,0,1),so=o*o*(3-2*o);   // ยิ่งซูมลึก โลกยิ่งจาง แผนที่ยิ่งชัด
+  if(Math.abs(so-op)>.003){op=so;sp.style.opacity=so}
+  if(so<=.004&&td<dF+1){run=false;sp.style.display="none";sp.style.opacity=0}
 }
-function goTH(){touched=true;const a=Math.atan2(-TH.x,TH.z);ty=a+6.2832*Math.round((yaw-a)/6.2832);tp=Math.atan2(TH.y,Math.hypot(TH.x,TH.z));td=7.6;fly=true}
-function skip(){touched=true;fading=true;sp.classList.add("hide");setTimeout(()=>{run=false;sp.style.display="none"},1000)}
-window.openSpace=()=>{sp.style.display="block";void sp.offsetWidth;sp.classList.remove("hide");fly=false;fading=false;touched=true;
-  const a=Math.atan2(-TH.x,TH.z);yaw=ty=a;pit=tp=Math.atan2(TH.y,Math.hypot(TH.x,TH.z));dist=7.6;td=30;if(!run){run=true;t0=performance.now();requestAnimationFrame(loop)}};
-cv.addEventListener("pointerdown",e=>{drag=true;touched=true;if(!fading)fly=false;lx=e.clientX;ly=e.clientY;cv.setPointerCapture(e.pointerId);cv.style.cursor="grabbing"});
-cv.addEventListener("pointermove",e=>{if(!drag)return;ty+=(e.clientX-lx)*.006;tp=clamp(tp+(e.clientY-ly)*.006,-1.2,1.2);lx=e.clientX;ly=e.clientY});
-const up=()=>{drag=false;cv.style.cursor="grab"};cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
-cv.addEventListener("wheel",e=>{e.preventDefault();touched=true;if(!fading)fly=false;td=clamp(td*(1+e.deltaY*.0012),6.8,70)},{passive:false});
-document.getElementById("spGo").onclick=goTH;document.getElementById("spSkip").onclick=skip;
-requestAnimationFrame(loop);setTimeout(()=>{if(!touched)goTH()},2000);
+function goTH(){touched=true;calcDF();if(window.AT)AT.map.setCenter({lat:13.5,lng:101});
+  ty=aTH+6.2832*Math.round((yaw-aTH)/6.2832);tp=pTH;td=dF-.6;fly=true;out=false}
+function zoomBy(f){touched=true;fly=false;calcDF();td=clamp(td*f,dF-.6,70);if(f<1&&td<16)goTH()}
+window.openSpace=()=>{calcDF();sp.style.display="block";sp.style.opacity=0;op=0;fly=false;out=true;touched=true;
+  yaw=ty=aTH;pit=tp=pTH;dist=dF;td=34;if(!run){run=true;t0=performance.now();requestAnimationFrame(loop)}};
+const P=new Map(),d2=()=>{const v=[...P.values()];return Math.hypot(v[0].clientX-v[1].clientX,v[0].clientY-v[1].clientY)};let pd=0;
+cv.addEventListener("pointerdown",e=>{touched=true;fly=false;P.set(e.pointerId,e);cv.setPointerCapture(e.pointerId);
+  if(P.size===1){drag=true;lx=e.clientX;ly=e.clientY;cv.style.cursor="grabbing"}else if(P.size===2){drag=false;pd=d2()}});
+cv.addEventListener("pointermove",e=>{if(!P.has(e.pointerId))return;P.set(e.pointerId,e);
+  if(P.size===2){const d=d2();if(pd>0)zoomBy(pd/d);pd=d;return}
+  if(drag){ty+=(e.clientX-lx)*.006;tp=clamp(tp+(e.clientY-ly)*.006,-1.2,1.2);lx=e.clientX;ly=e.clientY}});
+const up=e=>{P.delete(e.pointerId);drag=false;cv.style.cursor="grab";if(P.size===1){const v=[...P.values()][0];lx=v.clientX;ly=v.clientY;drag=true}};
+cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+cv.addEventListener("wheel",e=>{e.preventDefault();zoomBy(1+clamp(e.deltaY,-120,120)*.0012)},{passive:false});
+document.getElementById("spGo").onclick=goTH;
+requestAnimationFrame(loop);setTimeout(()=>{if(!touched)goTH()},2200);
 })();
 </script>
 <header>
@@ -179,8 +186,7 @@ requestAnimationFrame(loop);setTimeout(()=>{if(!touched)goTH()},2000);
       <button id="aCam" data-t="aCam"></button>
       <a href="tel:1784" data-t="aCall1"></a><a href="tel:1669" class="c2" data-t="aCall2"></a>
     </div>
-    <div id="camBox" class="card" style="display:none"><input id="wkey" data-p="camKeyPh" autocomplete="off"><button id="wsave" data-t="camSave" style="margin-top:6px;width:100%"></button><a class="note" href="https://api.windy.com/keys" target="_blank" rel="noopener noreferrer" data-t="camGet"></a></div>
-    <div id="camInfo" class="note"></div><div id="locNote" class="note" style="margin-bottom:8px"></div>
+    <div id="locNote" class="note" style="margin-bottom:8px"></div>
     <h2 data-t="dashH"></h2>
     <div class="card">
       <div class="ch"><span id="dProv"></span><span id="dRisk" class="badge"></span></div>
@@ -261,7 +267,6 @@ requestAnimationFrame(loop);setTimeout(()=>{if(!touched)goTH()},2000);
 
 <script>
 // ใส่ Google Maps API key ตรงนี้ได้เลย (หรือกรอกในหน้าเว็บครั้งแรก ระบบจะจำไว้ในเครื่อง)
-const WINDY_KEY="";   // (ไม่บังคับ) ใส่ Windy Webcams API key ฟรี เพื่อดูกล้องสดทั่วไทย หรือกรอกในหน้าเว็บก็ได้
 const GMAPS_KEY="AIzaSyDjjzs3WEJk48sTxxCj0_FRSfaikErB33M";
 
 const $=id=>document.getElementById(id);
@@ -270,7 +275,7 @@ const REFRESH_MS=60*1000;
 
 // ===== ภาษา =====
 const T={th:{
-title:"แผนที่เฝ้าระวังภัย ประเทศไทย",provL:"จังหวัด:",goTH:"🇹🇭 ซูมเข้าประเทศไทย",skipSp:"ข้ามไปแผนที่",spHint:"ลากเพื่อหมุนโลก · เลื่อนล้อเมาส์เพื่อซูม",globeBtn:"🌍 ดูโลก",aCam:"📹 กล้องสดทั่วประเทศไทย (เปิด/ปิด)",camKeyPh:"วาง Windy Webcams API key (ฟรี)",camSave:"บันทึกคีย์กล้อง",camGet:"ขอคีย์ฟรีที่ api.windy.com/keys ↗",camCount:"จำนวนกล้องที่พบ:",locing:"กำลังหาตำแหน่งที่แม่นที่สุด…",accIs:"ความแม่นยำของตำแหน่ง ±",accM:"เมตร",accBad:"ตำแหน่งจากคอมไม่แม่น (ใช้ Wi‑Fi/IP) ลากจุดสีน้ำเงินไปวางที่บ้านคุณได้ หรือเปิดเว็บนี้ในมือถือที่เปิด GPS",accOk:"ตำแหน่งแม่นยำดี · ลากจุดสีน้ำเงินเพื่อปรับได้",youHere:"ฉันอยู่ที่นี่",aLoc:"📍 ตรวจที่ที่ฉันอยู่ตอนนี้",aGoogle:"🌊 ดูแผนที่น้ำท่วมของ Google",aCall1:"📞 โทร 1784 ขอความช่วยเหลือน้ำท่วม (ปภ.)",aCall2:"🚑 โทร 1669 เจ็บป่วยฉุกเฉิน",advRoute:"🧭 วางแผนเส้นทาง (แตะเพื่อเปิด)",advLayers:"⚙ ตั้งค่าแผนที่เพิ่มเติม (แตะเพื่อเปิด)",bigOk:"ปลอดภัย ยังไม่พบสัญญาณน้ำท่วม",bigSubOk:"ฝนและน้ำในแม่น้ำอยู่ในเกณฑ์ปกติ",bigWatch:"เฝ้าระวัง",bigDanger:"เสี่ยงน้ำท่วมสูง",bigHeavy:"ฝนหนักมาก ระวังน้ำท่วมขัง",bigSubRain:"ฝนตกหนัก ระวังน้ำท่วมขังและถนนลื่น ติดตามประกาศ",bigOther:"จังหวัดอื่นที่เสี่ยง:",prov2:"จังหวัด",flTxt:"เสี่ยงน้ำท่วม จ.",whyRain:"ฝนสะสมสูง (3 วันก่อน–2 วันข้างหน้า)",legend:"🔴 วงกลมแดง = พื้นที่เสี่ยงน้ำท่วม · 🔵 จุดฟ้า = ฝนกำลังตก · แตะจุดเพื่อดูรายละเอียด",layers:"ชั้นข้อมูล",radar:"เรดาร์ฝน (เคลื่อนไหว)",sat:"เมฆดาวเทียมอินฟราเรด",fire:"จุดความร้อน/ไฟไหม้ 24 ชม.",quake:"แผ่นดินไหว/สึนามิ",rain:"ฝนใกล้ตก 3 ชม.",flood:"แจ้งเตือนน้ำท่วม/น้ำหลาก",
+title:"Alert Thailand",provL:"จังหวัด:",goTH:"🇹🇭 ซูมเข้าประเทศไทย",skipSp:"ข้ามไปแผนที่",spHint:"ลากเพื่อหมุนโลก · เลื่อนล้อเมาส์เพื่อซูม",globeBtn:"🌍 ดูโลก",aCam:"📹 ดูกล้องสดทั่วประเทศไทย",camTitle:"📹 กล้องสดทั่วประเทศไทย",camOpen:"เปิดในแท็บใหม่ ↗",camHint:"ถ้าหน้านี้ว่าง ให้กด “เปิดในแท็บใหม่”",camClose:"✕ ปิด",camKeyPh:"วาง Windy Webcams API key (ฟรี)",camSave:"บันทึกคีย์กล้อง",camGet:"ขอคีย์ฟรีที่ api.windy.com/keys ↗",camCount:"จำนวนกล้องที่พบ:",locing:"กำลังหาตำแหน่งที่แม่นที่สุด…",accIs:"ความแม่นยำของตำแหน่ง ±",accM:"เมตร",accBad:"ตำแหน่งจากคอมไม่แม่น (ใช้ Wi‑Fi/IP) ลากจุดสีน้ำเงินไปวางที่บ้านคุณได้ หรือเปิดเว็บนี้ในมือถือที่เปิด GPS",accOk:"ตำแหน่งแม่นยำดี · ลากจุดสีน้ำเงินเพื่อปรับได้",youHere:"ฉันอยู่ที่นี่",aLoc:"📍 ตรวจที่ที่ฉันอยู่ตอนนี้",aGoogle:"🌊 ดูแผนที่น้ำท่วมของ Google",aCall1:"📞 โทร 1784 ขอความช่วยเหลือน้ำท่วม (ปภ.)",aCall2:"🚑 โทร 1669 เจ็บป่วยฉุกเฉิน",advRoute:"🧭 วางแผนเส้นทาง (แตะเพื่อเปิด)",advLayers:"⚙ ตั้งค่าแผนที่เพิ่มเติม (แตะเพื่อเปิด)",bigOk:"ปลอดภัย ยังไม่พบสัญญาณน้ำท่วม",bigSubOk:"ฝนและน้ำในแม่น้ำอยู่ในเกณฑ์ปกติ",bigWatch:"เฝ้าระวัง",bigDanger:"เสี่ยงน้ำท่วมสูง",bigHeavy:"ฝนหนักมาก ระวังน้ำท่วมขัง",bigSubRain:"ฝนตกหนัก ระวังน้ำท่วมขังและถนนลื่น ติดตามประกาศ",bigOther:"จังหวัดอื่นที่เสี่ยง:",prov2:"จังหวัด",flTxt:"เสี่ยงน้ำท่วม จ.",whyRain:"ฝนสะสมสูง (3 วันก่อน–2 วันข้างหน้า)",legend:"🔴 วงกลมแดง = พื้นที่เสี่ยงน้ำท่วม · 🔵 จุดฟ้า = ฝนกำลังตก · แตะจุดเพื่อดูรายละเอียด",layers:"ชั้นข้อมูล",radar:"เรดาร์ฝน (เคลื่อนไหว)",sat:"เมฆดาวเทียมอินฟราเรด",fire:"จุดความร้อน/ไฟไหม้ 24 ชม.",quake:"แผ่นดินไหว/สึนามิ",rain:"ฝนใกล้ตก 3 ชม.",flood:"แจ้งเตือนน้ำท่วม/น้ำหลาก",
 locate:"📍 ตรวจที่ตำแหน่งของฉัน",tapHint:"แตะจุดใดก็ได้ในประเทศไทยเพื่อตรวจฝน/ไฟ/ชื่อสถานที่",key:"NASA FIRMS MAP_KEY (ฟรี) เพื่อนับจุดไฟตรงที่แตะ",keyBtn:"บันทึกคีย์",
 emerg:"เบอร์ฉุกเฉิน",official:"ข้อมูลทางการ",
 t191:"191 ตำรวจ",t199:"199 ดับเพลิง",t1669:"1669 การแพทย์ฉุกเฉิน",t1784:"1784 ปภ.",t1129:"1129 PEA ไฟดับ",t1130:"1130 MEA ไฟดับ",
@@ -291,7 +296,7 @@ st0:"ปกติ",dPast:"7 วันก่อน",dFcst:"พยากรณ์ 
 wcClear:"แจ่มใส",wcPart:"มีเมฆบางส่วน",wcCloud:"เมฆมาก",wcFog:"หมอก",wcDrizzle:"ฝนปรอย",wcRain:"ฝนตก",wcShower:"ฝนซู่",wcStorm:"พายุฝนฟ้าคะนอง",
 menuMap:"🗺 แผนที่น้ำท่วม",menuRadar:"🌧 เรดาร์ฝน",menuFc:"📅 พยากรณ์ 3 วัน",menuRoute:"🧭 ตรวจเส้นทาง",menuTel:"📞 เบอร์ฉุกเฉิน",menuSrc:"🔗 ข้อมูลทางการ",avg:"เฉลี่ย 7 วันก่อน",peakL:"คาดสูงสุด"},
 en:{
-title:"Thailand Hazard Watch Map",provL:"Province:",goTH:"🇹🇭 Zoom to Thailand",skipSp:"Skip to map",spHint:"Drag to rotate · scroll to zoom",globeBtn:"🌍 Globe",aCam:"📹 Live cameras across Thailand (on/off)",camKeyPh:"Paste Windy Webcams API key (free)",camSave:"Save camera key",camGet:"Get a free key at api.windy.com/keys ↗",camCount:"Cameras found:",locing:"Finding your most accurate position…",accIs:"Position accuracy ±",accM:"m",accBad:"Desktop location is imprecise (Wi‑Fi/IP). Drag the blue dot to your home, or open this page on a phone with GPS on.",accOk:"Good accuracy · drag the blue dot to adjust",youHere:"I am here",aLoc:"📍 Check where I am now",aGoogle:"🌊 Open Google flood map",aCall1:"📞 Call 1784 flood help (DDPM)",aCall2:"🚑 Call 1669 medical emergency",advRoute:"🧭 Route planner (tap to open)",advLayers:"⚙ More map settings (tap to open)",bigOk:"Safe, no flood signal",bigSubOk:"Rain and rivers are normal",bigWatch:"Watch",bigDanger:"High flood risk",bigHeavy:"Very heavy rain, watch for flooding",bigSubRain:"Heavy rain: watch for standing water and slippery roads",bigOther:"Other provinces at risk:",prov2:"provinces",flTxt:"Flood risk:",whyRain:"High accumulated rain (past 3 days to next 2)",legend:"🔴 Red circle = flood-risk area · 🔵 Blue dot = raining · tap a dot for details",layers:"Layers",radar:"Rain radar (animated)",sat:"Infrared cloud satellite",fire:"Fire hotspots, last 24h",quake:"Earthquakes / tsunami",rain:"Rain next 3h",flood:"Flood alerts",
+title:"Alert Thailand",provL:"Province:",goTH:"🇹🇭 Zoom to Thailand",skipSp:"Skip to map",spHint:"Drag to rotate · scroll to zoom",globeBtn:"🌍 Globe",aCam:"📹 Live cameras across Thailand",camTitle:"📹 Live cameras across Thailand",camOpen:"Open in new tab ↗",camHint:"If this is blank, use “Open in new tab”",camClose:"✕ Close",camKeyPh:"Paste Windy Webcams API key (free)",camSave:"Save camera key",camGet:"Get a free key at api.windy.com/keys ↗",camCount:"Cameras found:",locing:"Finding your most accurate position…",accIs:"Position accuracy ±",accM:"m",accBad:"Desktop location is imprecise (Wi‑Fi/IP). Drag the blue dot to your home, or open this page on a phone with GPS on.",accOk:"Good accuracy · drag the blue dot to adjust",youHere:"I am here",aLoc:"📍 Check where I am now",aGoogle:"🌊 Open Google flood map",aCall1:"📞 Call 1784 flood help (DDPM)",aCall2:"🚑 Call 1669 medical emergency",advRoute:"🧭 Route planner (tap to open)",advLayers:"⚙ More map settings (tap to open)",bigOk:"Safe, no flood signal",bigSubOk:"Rain and rivers are normal",bigWatch:"Watch",bigDanger:"High flood risk",bigHeavy:"Very heavy rain, watch for flooding",bigSubRain:"Heavy rain: watch for standing water and slippery roads",bigOther:"Other provinces at risk:",prov2:"provinces",flTxt:"Flood risk:",whyRain:"High accumulated rain (past 3 days to next 2)",legend:"🔴 Red circle = flood-risk area · 🔵 Blue dot = raining · tap a dot for details",layers:"Layers",radar:"Rain radar (animated)",sat:"Infrared cloud satellite",fire:"Fire hotspots, last 24h",quake:"Earthquakes / tsunami",rain:"Rain next 3h",flood:"Flood alerts",
 locate:"📍 Check my location",tapHint:"Tap anywhere in Thailand to check rain, fire and place name",key:"NASA FIRMS MAP_KEY (free) to count fires where you tap",keyBtn:"Save key",
 emerg:"Emergency numbers",official:"Official sources",
 t191:"191 Police",t199:"199 Fire",t1669:"1669 Medical",t1784:"1784 Disaster (DDPM)",t1129:"1129 PEA outage",t1130:"1130 MEA outage",
@@ -353,7 +358,9 @@ let map=new google.maps.Map($("map"),{
   gestureHandling:"greedy",clickableIcons:false,streetViewControl:false,fullscreenControl:true,mapTypeControl:false,
   mapTypeControlOptions:{style:google.maps.MapTypeControlStyle.DROPDOWN_MENU}
 });
-map.fitBounds(TH,0);
+map.fitBounds(TH,0);window.AT={map};
+let zFit=null,zOut=0;google.maps.event.addListenerOnce(map,"idle",()=>zFit=map.getZoom());
+$("map").addEventListener("wheel",e=>{if(e.deltaY>0&&zFit!=null&&map.getZoom()<=zFit+.05){if(++zOut>=3){zOut=0;window.openSpace&&openSpace()}}else zOut=0},{passive:true});
 const iw=new google.maps.InfoWindow();
 const stat={};const note=(k,v)=>{stat[k]=v;$("st").textContent=Object.values(stat).join(" · ")};
 
@@ -364,7 +371,7 @@ class TL{
     const d=doc.createElement("div");d.style.cssText="width:256px;height:256px;position:relative;overflow:hidden;pointer-events:none";
     const n=1<<z;if(c.y<0||c.y>=n)return d;
     const x=((c.x%n)+n)%n,img=doc.createElement("img");img.draggable=false;img.decoding="async";
-    if(z>this.maxZ){const k=z-this.maxZ;if(k>4)return d;const s=1<<k;
+    if(z>this.maxZ){const k=z-this.maxZ;if(k>2)return d;const s=1<<k;
       img.src=this.fn(this.maxZ,x>>k,c.y>>k);
       img.style.cssText=`position:absolute;width:${256*s}px;height:${256*s}px;left:${-(x%s)*256}px;top:${-(c.y%s)*256}px`;
     }else{img.src=this.fn(z,x,c.y);img.style.cssText="width:256px;height:256px"}
@@ -760,27 +767,9 @@ document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{
   else if(g==="src")go("secSrc")});
 $("aLoc").onclick=()=>$("locate").click();
 $("aGoogle").onclick=()=>{const n=nm(C[curP]);window.open("https://www.google.com/maps/search/"+encodeURIComponent(lang==="th"?"น้ำท่วมจังหวัด"+n:"flood "+n+" province"),"_blank","noopener")};
-let camMk=[],camLoaded=false,camShow=false;
-const WK=()=>{try{return WINDY_KEY||localStorage.getItem("windykey")||""}catch(e){return WINDY_KEY}};
-async function loadCams(){
-  const k=WK();if(!k){$("camBox").style.display="block";return}
-  $("camBox").style.display="none";$("camInfo").textContent=t("checking");
-  try{
-    const all=[];
-    for(let off=0;off<3000;off+=50){
-      const r=await fetch(`https://api.windy.com/webcams/api/v3/webcams?lang=${lang}&limit=50&offset=${off}&countries=TH&include=images,location,player`,{headers:{"x-windy-api-key":k}});
-      if(r.status===401||r.status===403){try{localStorage.removeItem("windykey")}catch(e){}$("camBox").style.display="block";throw new Error("key")}
-      const j=await r.json(),w=j.webcams||[];all.push(...w);if(w.length<50)break}
-    camMk.forEach(m=>m.setMap(null));
-    camMk=all.filter(w=>w.location).map(w=>{
-      const m=new google.maps.Marker({position:{lat:w.location.latitude,lng:w.location.longitude},map:camShow?map:null,zIndex:8,optimized:true,icon:{path:google.maps.SymbolPath.CIRCLE,scale:6,fillColor:"#7b3fc4",fillOpacity:.9,strokeColor:"#fff",strokeWeight:2}});
-      m.addListener("click",()=>{const pl=w.player&&(w.player.live||w.player.day),im=w.images&&w.images.current&&w.images.current.preview;
-        iw.setContent(`<div style="width:300px;color:#14212b"><b>${esc(w.title)}</b><br>`+(pl?`<iframe src="${esc(pl)}" width="300" height="190" style="border:0" allowfullscreen></iframe>`:im?`<img src="${esc(im)}" style="width:100%">`:"")+`<br><small>${esc([w.location.city,w.location.region].filter(Boolean).join(", "))}</small></div>`);iw.open({map,anchor:m})});return m});
-    $("camInfo").textContent=t("camCount")+" "+camMk.length;camLoaded=true;
-  }catch(e){$("camInfo").textContent=t("fail")}
-}
-$("aCam").onclick=()=>{camShow=!camShow;if(camShow&&!camLoaded)loadCams();camMk.forEach(m=>m.setMap(camShow?map:null));$("aCam").classList.toggle("on",camShow)};
-$("wsave").onclick=()=>{const v=$("wkey").value.trim();if(!v)return;try{localStorage.setItem("windykey",v)}catch(e){}loadCams()};
+function camURL(){const me=ME&&ME.prov===curP,p=me?[ME.lat,ME.lng]:[C[curP][2],C[curP][3]];return `https://opencctv.org/?lat=${p[0].toFixed(4)}&lng=${p[1].toFixed(4)}&zoom=${me?11:9}`}
+$("aCam").onclick=()=>{const u=camURL();$("camOpen").href=u;$("camFr").src=u;$("camPanel").classList.add("on")};
+$("camClose").onclick=()=>{$("camPanel").classList.remove("on");$("camFr").src="about:blank"};
 $("globeBtn").onclick=()=>window.openSpace&&window.openSpace();
 loadDash();lastDash=Date.now();
 
