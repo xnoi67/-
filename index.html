@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>แผนที่เฝ้าระวังภัย</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f5f7;--panel:#fff;--ink:#14212b;--mute:#5d6b76;--line:#d9e0e5;--rain:#1c78d6;--fire:#e8480c;--flood:#0b8f8a;--power:#c99700;--help:#c0245a;--quake:#7b3fc4}
+@media(prefers-color-scheme:dark){:root{--bg:#10171d;--panel:#18222a;--ink:#e8eef2;--mute:#97a6b1;--line:#2a3843}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:'IBM Plex Sans Thai',system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
+header{padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:space-between}
+h1{font-size:17px;margin:0;font-weight:700}
+#stamp{font-size:12px;color:var(--mute)}
+#tsu{display:none;background:#b3141f;color:#fff;padding:8px 12px;font-size:14px;line-height:1.45}
+#tsu a{color:#fff;font-weight:600}
+main{flex:1;display:flex;min-height:0}
+.mapwrap{flex:1;position:relative;min-height:0}
+#map{position:absolute;inset:0;background:#0b1620}
+#anim{position:absolute;left:10px;bottom:24px;z-index:1000;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 8px;display:flex;gap:8px;align-items:center;font-size:13px}
+#anim button{padding:3px 10px}
+aside{width:350px;max-width:100%;background:var(--panel);border-left:1px solid var(--line);overflow:auto;padding:12px;font-size:14px}
+aside h2{font-size:14px;margin:14px 0 6px}aside h2:first-child{margin-top:0}
+.lay label{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none}
+.src{margin-left:auto;font-size:11px;color:var(--mute);text-align:right}
+.form{display:grid;gap:6px}
+select,input,textarea,button{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+button{cursor:pointer;background:var(--ink);color:var(--panel);border:0;font-weight:600}
+button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+:focus-visible{outline:2px solid var(--rain);outline-offset:1px}
+.item{padding:7px 0;border-top:1px solid var(--line);cursor:pointer}
+.item small{color:var(--mute);display:block}
+.tel a{display:inline-block;margin:2px 6px 2px 0;padding:4px 9px;border:1px solid var(--line);border-radius:14px;color:var(--ink);text-decoration:none;font-size:13px}
+.note{font-size:12px;color:var(--mute);line-height:1.5}
+.plabel{color:#fff;font-size:12px;font-weight:600;white-space:nowrap;text-shadow:0 0 3px #000,0 0 3px #000;text-align:center;line-height:1.1}
+.plabel small{display:block;font-weight:400;font-size:10px;opacity:.9}
+.hp{position:absolute;left:-9999px}
+@media(max-width:760px){main{flex-direction:column}aside{width:100%;border-left:0;border-top:1px solid var(--line);height:46vh;flex:none}h1{font-size:15px}}
+</style>
+</head>
+<body>
+<header>
+  <h1 data-t="title"></h1>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span id="stamp"></span>
+    <button class="sec" id="lang" style="padding:3px 10px"></button>
+  </div>
+</header>
+<div id="tsu" role="alert"></div>
+<main>
+  <div class="mapwrap">
+    <div id="map"></div>
+    <div id="anim"><button id="play" aria-label="play/pause">⏸</button><span id="ftime"></span></div>
+  </div>
+  <aside>
+    <h2 data-t="base"></h2>
+    <select id="base"><option value="sat" data-t="baseSat"></option><option value="street" data-t="baseStreet"></option></select>
+
+    <h2 data-t="layers"></h2>
+    <div class="lay">
+      <label><input type="checkbox" id="l-radar" checked><span class="dot" style="background:var(--rain)"></span><span data-t="radar"></span><span class="src">RainViewer<br><span data-t="world"></span></span></label>
+      <label><input type="checkbox" id="l-sat" checked><span class="dot" style="background:#9aa"></span><span data-t="sat"></span><span class="src">RainViewer<br><span data-t="world"></span></span></label>
+      <label><input type="checkbox" id="l-fire" checked><span class="dot" style="background:var(--fire)"></span><span data-t="fire"></span><span class="src">NASA GIBS<br><span data-t="world"></span></span></label>
+      <label><input type="checkbox" id="l-quake" checked><span class="dot" style="background:var(--quake)"></span><span data-t="quake"></span><span class="src">USGS<br><span data-t="world"></span></span></label>
+      <label><input type="checkbox" id="l-rain" checked><span class="dot" style="background:var(--rain)"></span><span data-t="rain"></span><span class="src">Open-Meteo<br><span data-t="th"></span></span></label>
+      <label><input type="checkbox" id="l-flood" checked><span class="dot" style="background:var(--flood)"></span><span data-t="flood"></span><span class="src">Open-Meteo<br><span data-t="th"></span></span></label>
+      <label><input type="checkbox" id="l-rep" checked><span class="dot" style="background:var(--help)"></span><span data-t="reps"></span><span class="src" data-t="shared"></span></label>
+    </div>
+    <div class="form" style="margin-top:6px">
+      <button id="locate" data-t="locate"></button>
+      <p class="note" style="margin:0" data-t="tapHint"></p>
+      <input id="firmsKey" data-p="key" autocomplete="off" maxlength="64">
+      <button class="sec" id="saveKey" data-t="keyBtn"></button>
+    </div>
+    <div class="note" id="st" style="margin-top:6px"></div>
+
+    <h2 data-t="report"></h2>
+    <div class="form">
+      <select id="rtype"><option value="power" data-t="power"></option><option value="help" data-t="help"></option><option value="flood" data-t="floodR"></option><option value="fire" data-t="fireR"></option></select>
+      <button class="sec" id="pick" data-t="pick"></button>
+      <input id="rplace" data-p="place" maxlength="120">
+      <textarea id="rnote" rows="2" data-p="detail" maxlength="300"></textarea>
+      <input class="hp" id="web" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button id="rsend" data-t="send"></button>
+    </div>
+    <p class="note" id="rhint"></p>
+    <p class="note" id="me"></p>
+
+    <h2 data-t="latest"></h2>
+    <div id="replist"></div>
+
+    <h2 data-t="emerg"></h2>
+    <div class="tel">
+      <a href="tel:191" data-t="t191"></a><a href="tel:199" data-t="t199"></a><a href="tel:1669" data-t="t1669"></a>
+      <a href="tel:1784" data-t="t1784"></a><a href="tel:1129" data-t="t1129"></a><a href="tel:1130" data-t="t1130"></a>
+    </div>
+    <h2 data-t="official"></h2>
+    <p class="note"><a href="https://www.ndwc.go.th" target="_blank" rel="noopener noreferrer">NDWC</a> · <a href="https://www.tmd.go.th" target="_blank" rel="noopener noreferrer">TMD</a> · <a href="https://www.tsunami.gov" target="_blank" rel="noopener noreferrer">NOAA Tsunami</a> · <a href="https://disaster.gistda.or.th" target="_blank" rel="noopener noreferrer">GISTDA</a> · <a href="https://www.pea.co.th" target="_blank" rel="noopener noreferrer">PEA</a> · <a href="https://www.mea.or.th" target="_blank" rel="noopener noreferrer">MEA</a></p>
+    <p class="note" data-t="limit"></p>
+  </aside>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const REFRESH_MS=10*60*1000, API="/api/reports";
+
+// ===== ภาษา / Language =====
+const T={th:{
+title:"แผนที่เฝ้าระวังภัย",base:"แผนที่พื้นหลัง",baseSat:"ภาพดาวเทียม",baseStreet:"แผนที่ถนน",layers:"ชั้นข้อมูล (ตรวจทั่วโลกได้)",
+radar:"เรดาร์ฝน (เคลื่อนไหว)",sat:"เมฆดาวเทียมอินฟราเรด (เคลื่อนไหว)",fire:"จุดความร้อน/ไฟไหม้ 24 ชม.",quake:"แผ่นดินไหว/สึนามิ",rain:"ฝนใกล้ตก 3 ชม.",flood:"แนวโน้มน้ำหลาก",reps:"รายงานจากประชาชน",
+world:"ทั่วโลก",th:"ไทย",shared:"ใช้ร่วมกัน",locate:"📍 ตรวจที่ตำแหน่งของฉัน",tapHint:"แตะที่จุดใดก็ได้บนแผนที่ทั่วโลกเพื่อตรวจฝน/ไฟ/ชื่อสถานที่",
+key:"NASA FIRMS MAP_KEY (ฟรี) เพื่อนับจุดไฟตรงที่แตะ",keyBtn:"บันทึกคีย์",
+report:"แจ้งเหตุ",power:"ไฟฟ้าดับ",help:"ขอความช่วยเหลือ",floodR:"น้ำท่วม",fireR:"ไฟไหม้",pick:"1) แตะเลือกตำแหน่งบนแผนที่",place:"สถานที่ (ซอย/ตำบล/อำเภอ)",detail:"รายละเอียด / เบอร์ติดต่อ",send:"2) ส่งรายงาน",
+hint0:"ยังไม่ได้เลือกตำแหน่ง",hintPick:"แตะบนแผนที่เพื่อปักหมุด",hintSel:"เลือกตำแหน่งแล้ว",hintNeed:"กรุณาเลือกตำแหน่งก่อนส่ง",sent:"ส่งแล้ว ทุกคนเห็นรายงานนี้",savedLocal:"เชื่อมระบบกลางไม่ได้ บันทึกในเครื่องนี้เท่านั้น",wait:"ส่งถี่เกินไป กรุณารอสักครู่",user:"ผู้ใช้",you:"คุณคือผู้ใช้ #",
+latest:"รายงานล่าสุด (24 ชม.)",none:"ยังไม่มีรายงาน",emerg:"เบอร์ฉุกเฉิน",official:"ข้อมูลทางการ",
+t191:"191 ตำรวจ",t199:"199 ดับเพลิง",t1669:"1669 การแพทย์ฉุกเฉิน",t1784:"1784 ปภ.",t1129:"1129 PEA ไฟดับ",t1130:"1130 MEA ไฟดับ",
+limit:"ข้อจำกัด: ไฟดับ/ขอความช่วยเหลือมาจากรายงานผู้ใช้ ไม่ใช่ข้อมูลทางการ น้ำหลากเป็นการประมาณจากแบบจำลอง เตือนสึนามิในหน้านี้อ้างอิงข้อมูลแผ่นดินไหว USGS ไม่ใช่ประกาศทางการ กรณีฉุกเฉินให้โทรเบอร์ด้านบนและทำตามประกาศของหน่วยงานรัฐ",
+upd:"อัปเดตล่าสุด",every:"รีเฟรชทุก 10 นาที",checking:"กำลังตรวจสอบ…",nowRain:"ตอนนี้ฝนกำลังตก",noRain:"ตอนนี้ยังไม่มีฝน",next3:"3 ชม.ข้างหน้า",prob:"โอกาสตก",mm:"มม.",fail:"ดึงข้อมูลไม่สำเร็จ",
+fireN:"จุดไฟใน 24 ชม. ภายในรัศมี ~25 กม.:",fireKey:"ใส่คีย์ FIRMS เพื่อนับจุดไฟตรงนี้ (ดูจุดสีแดง/ส้มบนแผนที่ได้เลย)",
+tsuT:"⚠ แจ้งเตือน: แผ่นดินไหวที่อาจก่อสึนามิ (24 ชม.ล่าสุด)",tsuOK:"แผ่นดินไหว: ไม่พบเหตุขนาดใหญ่ใกล้ทะเลใน 24 ชม.",tsuNote:"ข้อมูลจาก USGS ไม่ใช่ประกาศทางการ ตรวจสอบ",mag:"ขนาด",
+rainPop:"ฝนที่ 3 ชม.",floodPop:"ปริมาณน้ำในแม่น้ำ: เพิ่มขึ้น",floodNote:"ประมาณการจากแบบจำลอง ไม่ใช่ประกาศทางการ",nogeo:"อ่านตำแหน่งไม่ได้ กรุณาอนุญาตการเข้าถึงตำแหน่ง"},
+en:{
+title:"Hazard Watch Map",base:"Basemap",baseSat:"Satellite imagery",baseStreet:"Street map",layers:"Layers (worldwide checks)",
+radar:"Rain radar (animated)",sat:"Infrared cloud satellite (animated)",fire:"Fire hotspots, last 24h",quake:"Earthquakes / tsunami",rain:"Rain next 3h",flood:"River flood trend",reps:"Citizen reports",
+world:"Worldwide",th:"Thailand",shared:"shared",locate:"📍 Check my location",tapHint:"Tap anywhere on the world map to check rain, fire and place name",
+key:"NASA FIRMS MAP_KEY (free) to count fires where you tap",keyBtn:"Save key",
+report:"Report an incident",power:"Power outage",help:"Need help",floodR:"Flooding",fireR:"Fire",pick:"1) Tap to choose location",place:"Place (street/district)",detail:"Details / contact",send:"2) Send report",
+hint0:"No location selected",hintPick:"Tap the map to drop a pin",hintSel:"Location selected",hintNeed:"Choose a location first",sent:"Sent — everyone can see this report",savedLocal:"Server unreachable; saved on this device only",wait:"Too many reports, please wait",user:"User",you:"You are user #",
+latest:"Latest reports (24h)",none:"No reports yet",emerg:"Emergency numbers (Thailand)",official:"Official sources",
+t191:"191 Police",t199:"199 Fire",t1669:"1669 Medical",t1784:"1784 Disaster (DDPM)",t1129:"1129 PEA outage",t1130:"1130 MEA outage",
+limit:"Limits: outage/help data are user reports, not official. Flood trend is a model estimate. Tsunami notice here is derived from USGS earthquake data, not an official warning. In an emergency call the numbers above and follow government announcements.",
+upd:"Updated",every:"refresh every 10 min",checking:"Checking…",nowRain:"Raining now",noRain:"No rain right now",next3:"Next 3h",prob:"chance",mm:"mm",fail:"Could not fetch data",
+fireN:"Fire detections in 24h within ~25 km:",fireKey:"Add a FIRMS key to count fires here (red/orange dots are visible on the map)",
+tsuT:"⚠ ALERT: earthquake that may cause a tsunami (last 24h)",tsuOK:"Earthquakes: no large offshore event in the last 24h",tsuNote:"USGS data, not an official warning. Check",mag:"M",
+rainPop:"Rain in 3h",floodPop:"River discharge: rising",floodNote:"Model estimate, not official",nogeo:"Cannot read location. Please allow location access."}};
+let lang="th";try{lang=localStorage.getItem("lang")||"th"}catch(e){}
+const t=k=>T[lang][k]||k, loc=()=>lang==="th"?"th-TH":"en-GB";
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll("[data-t]").forEach(e=>e.textContent=t(e.dataset.t));
+  document.querySelectorAll("[data-p]").forEach(e=>e.placeholder=t(e.dataset.p));
+  $("lang").textContent=lang==="th"?"EN":"ไทย";document.title=t("title");
+  if(!picked)$("rhint").textContent=t("hint0");
+}
+
+// ===== แผนที่ =====
+const map=L.map("map",{zoomSnap:.25,zoomDelta:.5,wheelPxPerZoomLevel:110,minZoom:2,worldCopyJump:true,preferCanvas:true,zoomControl:true}).setView([13.2,101],5.5);
+const TO={keepBuffer:4,updateWhenIdle:false,updateWhenZooming:false};
+const ESRI="https://server.arcgisonline.com/ArcGIS/rest/services/";
+const BASE={
+  sat:L.layerGroup([L.tileLayer(ESRI+"World_Imagery/MapServer/tile/{z}/{y}/{x}",{...TO,maxZoom:19,attribution:"Imagery © Esri, Maxar, Earthstar"}),
+      L.tileLayer(ESRI+"Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{...TO,maxZoom:19,zIndex:8})]),
+  street:L.layerGroup([L.tileLayer(ESRI+"World_Street_Map/MapServer/tile/{z}/{y}/{x}",{...TO,maxZoom:19,attribution:"Tiles © Esri"})])};
+let curBase=BASE.sat.addTo(map);
+$("base").onchange=e=>{map.removeLayer(curBase);curBase=BASE[e.target.value].addTo(map)};
+
+const G={radar:L.layerGroup(),sat:L.layerGroup(),fire:L.layerGroup(),quake:L.layerGroup(),rain:L.layerGroup(),flood:L.layerGroup(),rep:L.layerGroup(),lab:L.layerGroup()};
+G.fire.addLayer(L.tileLayer("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_Thermal_Anomalies_375m_All/default/default/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png",{...TO,maxNativeZoom:8,maxZoom:19,zIndex:9,attribution:"NASA GIBS/FIRMS"}));
+Object.keys(G).forEach(k=>{const c=$("l-"+k);if(!c){G[k].addTo(map);return}
+  c.checked&&G[k].addTo(map);c.onchange=e=>e.target.checked?G[k].addTo(map):map.removeLayer(G[k])});
+
+const COL={power:"#c99700",help:"#c0245a",flood:"#0b8f8a",fire:"#e8480c",rain:"#1c78d6",quake:"#7b3fc4"};
+const mkDot=(ll,c,r,html)=>L.circleMarker(ll,{radius:r,color:c,weight:2,fillColor:c,fillOpacity:.5}).bindPopup(html);
+const stat={};const note=(k,v)=>{stat[k]=v;$("st").textContent=Object.values(stat).join(" · ")};
+
+// ชื่อจังหวัดสองภาษา [ไทย, English, lat, lon]
+const C=[["กรุงเทพฯ","Bangkok",13.75,100.5],["เชียงใหม่","Chiang Mai",18.79,98.98],["เชียงราย","Chiang Rai",19.91,99.83],["แม่ฮ่องสอน","Mae Hong Son",19.3,97.97],["น่าน","Nan",18.78,100.78],["พิษณุโลก","Phitsanulok",16.82,100.26],["นครสวรรค์","Nakhon Sawan",15.7,100.14],["ขอนแก่น","Khon Kaen",16.44,102.83],["อุดรธานี","Udon Thani",17.41,102.79],["นครราชสีมา","Nakhon Ratchasima",14.98,102.1],["อุบลราชธานี","Ubon Ratchathani",15.24,104.85],["สกลนคร","Sakon Nakhon",17.16,104.15],["อยุธยา","Ayutthaya",14.35,100.57],["ลพบุรี","Lopburi",14.8,100.65],["กาญจนบุรี","Kanchanaburi",14.0,99.55],["เพชรบุรี","Phetchaburi",13.11,99.94],["ชลบุรี","Chonburi",13.36,100.98],["ระยอง","Rayong",12.68,101.28],["จันทบุรี","Chanthaburi",12.61,102.1],["ประจวบฯ","Prachuap",11.81,99.8],["สุราษฎร์ธานี","Surat Thani",9.14,99.33],["นครศรีธรรมราช","Nakhon Si Thammarat",8.43,99.96],["ภูเก็ต","Phuket",7.88,98.39],["กระบี่","Krabi",8.09,98.91],["หาดใหญ่","Hat Yai",7.01,100.47],["นราธิวาส","Narathiwat",6.43,101.82],["ยะลา","Yala",6.54,101.28],["ตรัง","Trang",7.56,99.61],["ชุมพร","Chumphon",10.49,99.18],["ตาก","Tak",16.88,99.13],["สุโขทัย","Sukhothai",17.01,99.82],["แพร่","Phrae",18.14,100.14],["ลำปาง","Lampang",18.29,99.49],["เลย","Loei",17.49,101.72],["นครพนม","Nakhon Phanom",17.41,104.78],["บุรีรัมย์","Buriram",14.99,103.1],["สุรินทร์","Surin",14.88,103.49],["สระแก้ว","Sa Kaeo",13.82,102.07],["สุพรรณบุรี","Suphan Buri",14.47,100.12],["ราชบุรี","Ratchaburi",13.53,99.82],["นครปฐม","Nakhon Pathom",13.82,100.06]];
+const nm=c=>lang==="th"?c[0]:c[1];
+function drawLabels(){G.lab.clearLayers();C.forEach(c=>L.marker([c[2],c[3]],{interactive:false,icon:L.divIcon({className:"plabel",html:(lang==="th"?c[0]+"<small>"+c[1]:c[1]+"<small>"+c[0])+"</small>",iconSize:[0,0]})}).addTo(G.lab))}
+function labVis(){const on=map.getZoom()>=6.5;on?G.lab.addTo(map):map.removeLayer(G.lab)}
+map.on("zoomend",labVis);
+
+// ===== เรดาร์ + ดาวเทียม เคลื่อนไหว =====
+const AN={radar:{L:[],T:[]},sat:{L:[],T:[]}};let playing=true,step=0;
+function setFrames(k,list,mk){G[k].clearLayers();AN[k]={L:[],T:list.map(f=>f.time)};list.forEach(f=>{const l=mk(f);G[k].addLayer(l);AN[k].L.push(l)})}
+function tick(){
+  let lab="";
+  for(const k of ["radar","sat"]){const a=AN[k];if(!a.L.length||!map.hasLayer(G[k]))continue;
+    const n=a.L.length,i=playing?step%n:n-1;
+    a.L.forEach((l,j)=>l.setOpacity(j===i?(k==="sat"?.5:.7):0));
+    if(!lab)lab=new Date(a.T[i]*1000).toLocaleTimeString(loc(),{hour:"2-digit",minute:"2-digit"});}
+  $("ftime").textContent=lab;if(playing)step++;
+}
+setInterval(tick,800);
+$("play").onclick=()=>{playing=!playing;$("play").textContent=playing?"⏸":"▶"};
+async function loadSat(){
+  try{
+    const j=await (await fetch("https://api.rainviewer.com/public/weather-maps.json")).json();
+    const rad=[...j.radar.past.slice(-8),...(j.radar.nowcast||[])];
+    setFrames("radar",rad,f=>L.tileLayer(j.host+f.path+"/256/{z}/{x}/{y}/2/1_1.png",{opacity:0,maxNativeZoom:6,maxZoom:19,zIndex:6}));
+    const ir=(j.satellite&&j.satellite.infrared||[]).slice(-8);
+    setFrames("sat",ir,f=>L.tileLayer(j.host+f.path+"/256/{z}/{x}/{y}/0/0_0.png",{opacity:0,maxNativeZoom:6,maxZoom:19,zIndex:5}));
+    note("rv","RainViewer ✓");
+  }catch(e){note("rv","RainViewer ✗")}
+}
+
+// ===== ฝน/น้ำหลาก (ไทย) =====
+async function loadRain(){
+  try{
+    const la=C.map(c=>c[2]).join(","),lo=C.map(c=>c[3]).join(",");
+    const r=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&hourly=precipitation,precipitation_probability&forecast_hours=3&timezone=Asia%2FBangkok`)).json();
+    G.rain.clearLayers();
+    (Array.isArray(r)?r:[r]).forEach((d,i)=>{
+      const mm=d.hourly.precipitation.reduce((a,b)=>a+(b||0),0),p=Math.max(...d.hourly.precipitation_probability.map(x=>x||0));
+      if(mm<.2&&p<40)return;
+      mkDot([C[i][2],C[i][3]],COL.rain,6+Math.min(mm*2,16),`<b>${nm(C[i])}</b><br>${t("rainPop")}: ${mm.toFixed(1)} ${t("mm")}<br>${t("prob")} ${p}%`).addTo(G.rain)});
+    note("rain","Open-Meteo ✓");
+  }catch(e){note("rain","Open-Meteo ✗")}
+}
+async function loadFlood(){
+  try{
+    const la=C.map(c=>c[2]).join(","),lo=C.map(c=>c[3]).join(",");
+    const r=await (await fetch(`https://flood-api.open-meteo.com/v1/flood?latitude=${la}&longitude=${lo}&daily=river_discharge&past_days=7&forecast_days=5`)).json();
+    G.flood.clearLayers();
+    (Array.isArray(r)?r:[r]).forEach((d,i)=>{
+      const v=(d.daily&&d.daily.river_discharge||[]).filter(x=>x!=null);if(v.length<8)return;
+      const base=v.slice(0,7).reduce((a,b)=>a+b,0)/7,peak=Math.max(...v.slice(7));
+      if(base<1||peak/base<1.5)return;
+      mkDot([C[i][2],C[i][3]],COL.flood,10,`<b>${nm(C[i])}</b><br>${t("floodPop")} ≈ ${(peak/base).toFixed(1)}×<br><small>${t("floodNote")}</small>`).addTo(G.flood)});
+  }catch(e){}
+}
+
+// ===== แผ่นดินไหว / สึนามิ =====
+async function loadQuake(){
+  try{
+    const r=await (await fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson")).json();
+    G.quake.clearLayers();const al=[];
+    r.features.forEach(f=>{
+      const [lo,la]=f.geometry.coordinates,p=f.properties,m=p.mag||0,ts=p.tsunami===1;
+      const big=(ts&&m>=6.5)||m>=7;if(big)al.push({p,m});
+      mkDot([la,lo],big?"#b3141f":COL.quake,3+m*1.6,`<b>${t("mag")} ${m}</b> ${esc(p.place)}<br>${new Date(p.time).toLocaleString(loc())}${ts?"<br>🌊 tsunami flag":""}`).addTo(G.quake)});
+    const b=$("tsu");
+    if(al.length){
+      b.style.display="block";
+      b.innerHTML=`<b>${t("tsuT")}</b><br>`+al.slice(0,3).map(a=>`${t("mag")} ${a.m} — ${esc(a.p.place)} (${new Date(a.p.time).toLocaleTimeString(loc())})`).join("<br>")+`<br>${t("tsuNote")} <a href="https://www.ndwc.go.th" target="_blank" rel="noopener noreferrer">NDWC</a> · <a href="https://www.tsunami.gov" target="_blank" rel="noopener noreferrer">tsunami.gov</a>`;
+    }else{b.style.display="none"}
+    note("q",al.length?"⚠ "+al.length:t("tsuOK"));
+  }catch(e){note("q","USGS ✗")}
+}
+
+// ===== ตรวจที่จุดใดก็ได้ทั่วโลก =====
+async function queryPoint(ll){
+  const pop=L.popup().setLatLng(ll).setContent(t("checking")).openOn(map);
+  const lg=lang==="th"?"th":"en";let key="";try{key=localStorage.getItem("firmsKey")||""}catch(e){}
+  const wxP=fetch(`https://api.open-meteo.com/v1/forecast?latitude=${ll.lat}&longitude=${ll.lng}&current=precipitation&hourly=precipitation,precipitation_probability&forecast_hours=3&timezone=auto`).then(r=>r.json());
+  const nmP=fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${ll.lat}&longitude=${ll.lng}&localityLanguage=${lg}`).then(r=>r.json());
+  const fireP=(key&&map.hasLayer(G.fire))?fetch(`https://firms.modaps.eosdis.nasa.gov/api/area/csv/${encodeURIComponent(key)}/VIIRS_SNPP_NRT/${ll.lng-.25},${ll.lat-.25},${ll.lng+.25},${ll.lat+.25}/1`).then(r=>r.text()):Promise.reject();
+  const [w,n,f]=await Promise.allSettled([wxP,nmP,fireP]);
+  let h="";
+  if(n.status==="fulfilled"){const x=n.value;h+=`<b>${esc([x.locality||x.city,x.principalSubdivision,x.countryName].filter(Boolean).join(", ")||ll.lat.toFixed(3)+", "+ll.lng.toFixed(3))}</b><br>`}
+  if(w.status==="fulfilled"){const r=w.value,now=r.current.precipitation||0,mm=r.hourly.precipitation.reduce((a,b)=>a+(b||0),0),p=Math.max(...r.hourly.precipitation_probability.map(x=>x||0));
+    h+=(now>0?`<b style="color:#1c78d6">${t("nowRain")}</b> (${now.toFixed(1)} ${t("mm")}/h)`:t("noRain"))+`<br>${t("next3")}: ${mm.toFixed(1)} ${t("mm")} · ${t("prob")} ${p}%`}else h+=t("fail");
+  if(f.status==="fulfilled"){const ln=f.value.trim().split("\n");h+=ln[0].startsWith("latitude")?`<br>🔥 ${t("fireN")} <b>${ln.length-1}</b>`:`<br>🔥 ✗`}
+  else if(!key&&map.hasLayer(G.fire))h+=`<br><small>🔥 ${t("fireKey")}</small>`;
+  pop.setContent(h);
+}
+$("locate").onclick=()=>{
+  if(!navigator.geolocation){alert(t("nogeo"));return}
+  navigator.geolocation.getCurrentPosition(p=>{const ll=L.latLng(p.coords.latitude,p.coords.longitude);map.setView(ll,10);queryPoint(ll)},()=>alert(t("nogeo")),{enableHighAccuracy:true,timeout:15000});
+};
+$("saveKey").onclick=()=>{try{localStorage.setItem("firmsKey",$("firmsKey").value.trim())}catch(e){}};
+try{$("firmsKey").value=localStorage.getItem("firmsKey")||""}catch(e){}
+
+// ===== รายงานจากประชาชน (เก็บที่เซิร์ฟเวอร์ ทุกคนอ่านได้) =====
+const LBL=()=>({power:t("power"),help:t("help"),flood:t("floodR"),fire:t("fireR")});
+function devId(){
+  let v="";try{v=localStorage.getItem("did")||""}catch(e){}
+  if(!/^[0-9a-f-]{36}$/.test(v)){const m=document.cookie.match(/did=([0-9a-f-]{36})/);
+    v=m?m[1]:(crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c=="x"?r:r&3|8).toString(16)}))}
+  try{localStorage.setItem("did",v)}catch(e){}
+  document.cookie="did="+v+";max-age=31536000;path=/;SameSite=Strict;Secure";return v}
+let reps=[],picked=null,pickMode=false,pin=null,last=0;
+async function loadReps(){
+  try{const r=await fetch(API,{cache:"no-store"});if(!r.ok)throw 0;reps=(await r.json()).reports||[]}
+  catch(e){try{reps=JSON.parse(localStorage.getItem("reps")||"[]")}catch(_){reps=[]}}
+  const cut=Date.now()-864e5;reps=reps.filter(r=>r.t>cut).sort((a,b)=>b.t-a.t);
+  G.rep.clearLayers();const L_=LBL();
+  reps.forEach(r=>mkDot([r.lat,r.lon],COL[r.type]||"#888",9,`<b>${L_[r.type]||""}</b><br>${esc(r.place)}<br>${esc(r.note)}<br><small>${t("user")} #${esc(r.u||"-")} · ${new Date(r.t).toLocaleString(loc())}</small>`).addTo(G.rep));
+  $("replist").innerHTML=reps.length?reps.slice(0,25).map((r,i)=>`<div class="item" data-i="${i}"><span class="dot" style="background:${COL[r.type]||"#888"}"></span> <b>${L_[r.type]||""}</b> ${esc(r.place)}<small>${esc(r.note)} · ${t("user")} #${esc(r.u||"-")} · ${new Date(r.t).toLocaleTimeString(loc())}</small></div>`).join(""):`<span class="note">${t("none")}</span>`;
+  document.querySelectorAll(".item").forEach(e=>e.onclick=()=>{const r=reps[+e.dataset.i];map.setView([r.lat,r.lon],12)});
+}
+$("pick").onclick=()=>{pickMode=true;$("rhint").textContent=t("hintPick")};
+map.on("click",e=>{
+  if(!pickMode){queryPoint(e.latlng);return}
+  pickMode=false;picked=e.latlng;pin&&map.removeLayer(pin);pin=L.marker(e.latlng).addTo(map);
+  $("rhint").textContent=`${t("hintSel")} (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`;
+});
+$("rsend").onclick=async()=>{
+  if(!picked){$("rhint").textContent=t("hintNeed");return}
+  if(Date.now()-last<20000){$("rhint").textContent=t("wait");return}
+  const r={type:$("rtype").value,lat:picked.lat,lon:picked.lng,place:$("rplace").value.trim(),note:$("rnote").value.trim(),dev:devId(),website:$("web").value};
+  try{
+    const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(r)});
+    if(res.status===429){$("rhint").textContent=t("wait");return}
+    if(!res.ok)throw 0;const j=await res.json();
+    $("rhint").textContent=t("sent");if(j.u)$("me").textContent=t("you")+j.u;
+  }catch(e){
+    let l=[];try{l=JSON.parse(localStorage.getItem("reps")||"[]")}catch(_){}
+    l.push({type:r.type,lat:r.lat,lon:r.lon,place:r.place.slice(0,120),note:r.note.slice(0,300),t:Date.now()});
+    try{localStorage.setItem("reps",JSON.stringify(l.slice(-100)))}catch(_){}
+    $("rhint").textContent=t("savedLocal");
+  }
+  last=Date.now();pin&&map.removeLayer(pin);pin=null;picked=null;$("rplace").value="";$("rnote").value="";
+  loadReps();
+};
+
+// ===== เริ่มทำงาน =====
+$("lang").onclick=()=>{lang=lang==="th"?"en":"th";try{localStorage.setItem("lang",lang)}catch(e){}applyLang();drawLabels();refresh()};
+async function refresh(){
+  await Promise.all([loadSat(),loadRain(),loadFlood(),loadQuake(),loadReps()]);
+  $("stamp").textContent=t("upd")+" "+new Date().toLocaleTimeString(loc())+" · "+t("every");
+}
+applyLang();drawLabels();labVis();refresh();
+setInterval(refresh,REFRESH_MS);setInterval(loadReps,30000);
+const dm=document.cookie.match(/did=/);
+</script>
+</body>
+</html>
