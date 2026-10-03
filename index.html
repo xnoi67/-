@@ -8,8 +8,18 @@
 <link rel="preconnect" href="https://maps.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f3f5f7;--panel:#fff;--ink:#14212b;--mute:#5d6b76;--line:#d9e0e5;--rain:#1c78d6;--fire:#e8480c;--flood:#0b8f8a;--quake:#7b3fc4}
-@media(prefers-color-scheme:dark){:root{--bg:#10171d;--panel:#18222a;--ink:#e8eef2;--mute:#97a6b1;--line:#2a3843}}
+:root{--bg:#0a1a28;--panel:#0e2233;--card:#14304a;--ink:#e8f1f8;--mute:#8fa6b8;--line:#23425c;--rain:#38bdf8;--fire:#e8480c;--flood:#0b8f8a;--quake:#a678e8;color-scheme:dark}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;margin-bottom:8px}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:8px}
+.kpi b{display:block;font-size:22px;line-height:1.2}.kpi small{color:var(--mute);font-size:11px;line-height:1.3;display:block}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.menu button{padding:11px 8px;font-size:13px;border-radius:10px;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.menu button:hover{border-color:var(--rain)}
+.fcrow{display:grid;grid-template-columns:70px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid var(--line);font-size:13px}
+.fcrow:first-child{border-top:0}
+.bg0{background:#2f9e6e}.bg1{background:#c99700}.bg2{background:#e8480c}.bg3{background:#b3141f}
+@media(max-width:760px){#stamp{display:none}}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
 body{font-family:'IBM Plex Sans Thai',system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden}
@@ -32,7 +42,7 @@ aside h2{font-size:14px;margin:14px 0 6px}aside h2:first-child{margin-top:0}
 .src{margin-left:auto;font-size:11px;color:var(--mute);text-align:right}
 .form{display:grid;gap:6px}
 select,input,button{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
-button{cursor:pointer;background:var(--ink);color:var(--panel);border:0;font-weight:600}
+button{cursor:pointer;background:#1d9bf0;color:#fff;border:0;font-weight:600}
 button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
 :focus-visible{outline:2px solid var(--rain);outline-offset:1px}
 .tel a{display:inline-block;margin:2px 6px 2px 0;padding:4px 9px;border:1px solid var(--line);border-radius:14px;color:var(--ink);text-decoration:none;font-size:13px}
@@ -56,7 +66,7 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
 <header>
   <h1 data-t="title"></h1>
   <div style="display:flex;gap:8px;align-items:center">
-    <span id="stamp"></span>
+    <select id="prov" aria-label="province" style="max-width:160px"></select><span id="stamp"></span>
     <button class="sec" id="lang" style="padding:3px 10px"></button>
   </div>
 </header>
@@ -68,7 +78,33 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
     <div id="anim"><button id="play" aria-label="play/pause">⏸</button><span id="ftime"></span></div>
   </div>
   <aside>
-    <h2 data-t="routeH"></h2>
+    <h2 data-t="dashH"></h2>
+    <div class="card">
+      <div class="ch"><span id="dProv"></span><span id="dRisk" class="badge"></span></div>
+      <div class="kpi">
+        <div><b id="dMm">–</b><small data-t="dMm"></small></div>
+        <div><b id="dP">–</b><small data-t="dP"></small></div>
+        <div><b id="dT">–</b><small data-t="dT"></small></div>
+      </div>
+      <div class="note" data-t="dBarsT"></div>
+      <div id="dBars"></div>
+    </div>
+    <div class="card">
+      <div class="ch"><span data-t="dRiverT"></span><span id="dRStat" class="badge"></span></div>
+      <div id="dRiver"></div>
+      <p class="note" style="margin:6px 0 0" data-t="dRiverNote"></p>
+    </div>
+    <div class="menu">
+      <button data-go="map" data-t="menuMap"></button>
+      <button data-go="radar" data-t="menuRadar"></button>
+      <button data-go="fc" data-t="menuFc"></button>
+      <button data-go="route" data-t="menuRoute"></button>
+      <button data-go="tel" data-t="menuTel"></button>
+      <button data-go="src" data-t="menuSrc"></button>
+    </div>
+    <div class="card" id="secFc"><div class="ch" data-t="fc3"></div><div id="dFc"></div></div>
+
+    <h2 id="secRoute" data-t="routeH"></h2>
     <div class="form">
       <input id="rFrom" data-p="rFrom" autocomplete="off">
       <input id="rTo" data-p="rTo" autocomplete="off">
@@ -102,12 +138,12 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
     </div>
     <div class="note" id="st" style="margin-top:6px"></div>
 
-    <h2 data-t="emerg"></h2>
+    <h2 id="secTel" data-t="emerg"></h2>
     <div class="tel">
       <a href="tel:191" data-t="t191"></a><a href="tel:199" data-t="t199"></a><a href="tel:1669" data-t="t1669"></a>
       <a href="tel:1784" data-t="t1784"></a><a href="tel:1129" data-t="t1129"></a><a href="tel:1130" data-t="t1130"></a>
     </div>
-    <h2 data-t="official"></h2>
+    <h2 id="secSrc" data-t="official"></h2>
     <p class="note"><a href="https://www.ndwc.go.th" target="_blank" rel="noopener noreferrer">NDWC</a> · <a href="https://www.tmd.go.th" target="_blank" rel="noopener noreferrer">TMD</a> · <a href="https://www.tsunami.gov" target="_blank" rel="noopener noreferrer">NOAA Tsunami</a> · <a href="https://disaster.gistda.or.th" target="_blank" rel="noopener noreferrer">GISTDA</a> · <a href="https://www.pea.co.th" target="_blank" rel="noopener noreferrer">PEA</a> · <a href="https://www.mea.or.th" target="_blank" rel="noopener noreferrer">MEA</a></p>
     <p class="note" data-t="limit"></p>
   </aside>
@@ -144,7 +180,12 @@ l3:"รุนแรง",l2:"ปานกลาง",l1:"เฝ้าระวั�
 adv:"ย้ายของมีค่าขึ้นที่สูง เตรียมไฟฉาย/ยา/น้ำดื่ม ติดตามประกาศ ปภ. 1784",floodBanner:"⚠ แจ้งเตือนน้ำท่วม: ",prov:"จังหวัด (แตะดูรายการ)",
 notifBtn:"🔔 เปิดการแจ้งเตือนบนอุปกรณ์",notifOn:"🔔 เปิดการแจ้งเตือนแล้ว",hub:"ดูแผนที่น้ำท่วมของ Google Flood Hub ↗",
 gateMsg:"หน้านี้ใช้ Google Maps ต้องมี API key (เปิดใช้ Maps JavaScript API) วางคีย์ครั้งเดียว ระบบจะจำไว้ในเครื่อง",gateSave:"บันทึกและเปิดแผนที่",gateBad:"คีย์ใช้ไม่ได้ ตรวจสอบคีย์/การเปิดใช้งาน/การจำกัดโดเมน แล้วลองใหม่",
-routeH:"🧭 เส้นทาง / ตรวจระหว่างทาง",rFrom:"จุดเริ่มต้น (เว้นว่าง = ตำแหน่งปัจจุบัน)",rTo:"จุดหมาย: ชื่อสถานที่ / พิกัด / ลิงก์ Google Maps",mDrive:"🚗 ขับรถ",mWalk:"🚶 เดิน",mTransit:"🚌 ขนส่งสาธารณะ",rGo:"ค้นหาเส้นทางและตรวจ",rClear:"ล้าง",traffic:"แสดงสภาพจราจรสด",rHere:"ตำแหน่งปัจจุบัน",rNeedTo:"กรุณาใส่จุดหมาย",rNoPlace:"ไม่พบสถานที่",rShort:"ลิงก์แบบย่อ (maps.app.goo.gl) อ่านพิกัดไม่ได้ กรุณาเปิดลิงก์แล้วคัดลอกลิงก์เต็ม หรือวางพิกัด เช่น 13.75, 100.50",rFail:"คำนวณเส้นทางไม่ได้ ตรวจว่าคีย์เปิดใช้ Directions API (หรือ Routes API) และ Geocoding API แล้ว",rOut:"จุดเริ่มต้นหรือจุดหมายอยู่นอกประเทศไทย",rSum:"ระยะทาง",rEta:"ถึงประมาณ",tr:"จราจร",trNormal:"ปกติ",trNow:"ตอนนี้",trFree:"คล่องตัว",trSlow:"หนาแน่นเล็กน้อย",trJam:"รถติด",trHeavy:"ติดหนัก",trNA:"ไม่มีข้อมูลจราจรสำหรับโหมดนี้ (ดูสีบนแผนที่ได้ถ้าเปิดสภาพจราจรสด)",wH:"ฝน/พายุ/ลม ระหว่างทาง (ตามเวลาที่จะไปถึงแต่ละจุด)",wNone:"ไม่พบฝนตกหนัก พายุ หรือลมแรงตลอดเส้นทางในช่วงเวลาที่เดินทาง",wStorm:"พายุฝนฟ้าคะนอง",wHeavy:"ฝนตกหนัก",wMod:"ฝนปานกลาง",wLight:"ฝนเบา",wGust:"ลมกระโชกแรง",fH:"น้ำท่วม/น้ำหลากใกล้เส้นทาง",fNone:"ไม่พบการแจ้งเตือนน้ำท่วมใกล้เส้นทาง (ตรวจระดับจังหวัด)",aH:"อุบัติเหตุ/ปิดถนน",aNote:"ไม่มีแหล่งข้อมูลอุบัติเหตุสาธารณะแบบ real time ให้ดึงในหน้านี้ เปิดใน Google Maps เพื่อดูเหตุที่ผู้ใช้รายงาน หรือโทร 1193 (ตำรวจทางหลวง) / 1586 (กรมทางหลวง)",aOpen:"เปิดเส้นทางนี้ใน Google Maps ↗",km:"กม.",min:"นาที",hr:"ชม.",near:"ห่าง",goHere:"🧭 ไปที่นี่",viaT:"ผ่าน",altN:"เส้นทาง",at:"ใกล้ จ."},
+routeH:"🧭 เส้นทาง / ตรวจระหว่างทาง",rFrom:"จุดเริ่มต้น (เว้นว่าง = ตำแหน่งปัจจุบัน)",rTo:"จุดหมาย: ชื่อสถานที่ / พิกัด / ลิงก์ Google Maps",mDrive:"🚗 ขับรถ",mWalk:"🚶 เดิน",mTransit:"🚌 ขนส่งสาธารณะ",rGo:"ค้นหาเส้นทางและตรวจ",rClear:"ล้าง",traffic:"แสดงสภาพจราจรสด",rHere:"ตำแหน่งปัจจุบัน",rNeedTo:"กรุณาใส่จุดหมาย",rNoPlace:"ไม่พบสถานที่",rShort:"ลิงก์แบบย่อ (maps.app.goo.gl) อ่านพิกัดไม่ได้ กรุณาเปิดลิงก์แล้วคัดลอกลิงก์เต็ม หรือวางพิกัด เช่น 13.75, 100.50",rFail:"คำนวณเส้นทางไม่ได้ ตรวจว่าคีย์เปิดใช้ Directions API (หรือ Routes API) และ Geocoding API แล้ว",rOut:"จุดเริ่มต้นหรือจุดหมายอยู่นอกประเทศไทย",rSum:"ระยะทาง",rEta:"ถึงประมาณ",tr:"จราจร",trNormal:"ปกติ",trNow:"ตอนนี้",trFree:"คล่องตัว",trSlow:"หนาแน่นเล็กน้อย",trJam:"รถติด",trHeavy:"ติดหนัก",trNA:"ไม่มีข้อมูลจราจรสำหรับโหมดนี้ (ดูสีบนแผนที่ได้ถ้าเปิดสภาพจราจรสด)",wH:"ฝน/พายุ/ลม ระหว่างทาง (ตามเวลาที่จะไปถึงแต่ละจุด)",wNone:"ไม่พบฝนตกหนัก พายุ หรือลมแรงตลอดเส้นทางในช่วงเวลาที่เดินทาง",wStorm:"พายุฝนฟ้าคะนอง",wHeavy:"ฝนตกหนัก",wMod:"ฝนปานกลาง",wLight:"ฝนเบา",wGust:"ลมกระโชกแรง",fH:"น้ำท่วม/น้ำหลากใกล้เส้นทาง",fNone:"ไม่พบการแจ้งเตือนน้ำท่วมใกล้เส้นทาง (ตรวจระดับจังหวัด)",aH:"อุบัติเหตุ/ปิดถนน",aNote:"ไม่มีแหล่งข้อมูลอุบัติเหตุสาธารณะแบบ real time ให้ดึงในหน้านี้ เปิดใน Google Maps เพื่อดูเหตุที่ผู้ใช้รายงาน หรือโทร 1193 (ตำรวจทางหลวง) / 1586 (กรมทางหลวง)",aOpen:"เปิดเส้นทางนี้ใน Google Maps ↗",km:"กม.",min:"นาที",hr:"ชม.",near:"ห่าง",goHere:"🧭 ไปที่นี่",viaT:"ผ่าน",altN:"เส้นทาง",at:"ใกล้ จ.",
+dashH:"📊 สถานการณ์ปัจจุบัน",dMm:"ฝนคาดการณ์ 24 ชม. (มม.)",dP:"โอกาสฝนตกสูงสุด",dT:"อุณหภูมิตอนนี้ (°C)",dBarsT:"ฝนรายชั่วโมง 24 ชม.ข้างหน้า (ยิ่งเข้ม โอกาสตกยิ่งสูง)",
+dRiverT:"💧 ปริมาณน้ำในแม่น้ำ (แบบจำลอง)",dRiverNote:"เป็นปริมาณน้ำเทียบกับค่าเฉลี่ย 7 วันก่อน ไม่ใช่ระดับน้ำเทียบตลิ่งจากสถานีวัดน้ำ ดูสถานีวัดน้ำจริงได้ที่ข้อมูลทางการ (NDWC)",dNoRiver:"ไม่มีข้อมูลแม่น้ำสายหลักที่จุดนี้",
+st0:"ปกติ",dPast:"7 วันก่อน",dFcst:"พยากรณ์ 5 วัน",fc3:"📅 พยากรณ์ 3 วัน",rk0:"ไม่มีฝน",rk1:"ฝนเล็กน้อย–ปานกลาง",rk2:"ฝนหนัก",rk3:"ฝนหนักมาก",
+wcClear:"แจ่มใส",wcPart:"มีเมฆบางส่วน",wcCloud:"เมฆมาก",wcFog:"หมอก",wcDrizzle:"ฝนปรอย",wcRain:"ฝนตก",wcShower:"ฝนซู่",wcStorm:"พายุฝนฟ้าคะนอง",
+menuMap:"🗺 แผนที่น้ำท่วม",menuRadar:"🌧 เรดาร์ฝน",menuFc:"📅 พยากรณ์ 3 วัน",menuRoute:"🧭 ตรวจเส้นทาง",menuTel:"📞 เบอร์ฉุกเฉิน",menuSrc:"🔗 ข้อมูลทางการ",avg:"เฉลี่ย 7 วันก่อน",peakL:"คาดสูงสุด"},
 en:{
 title:"Thailand Hazard Watch Map",layers:"Layers",radar:"Rain radar (animated)",sat:"Infrared cloud satellite",fire:"Fire hotspots, last 24h",quake:"Earthquakes / tsunami",rain:"Rain next 3h",flood:"Flood alerts",
 locate:"📍 Check my location",tapHint:"Tap anywhere in Thailand to check rain, fire and place name",key:"NASA FIRMS MAP_KEY (free) to count fires where you tap",keyBtn:"Save key",
@@ -160,7 +201,12 @@ l3:"Severe",l2:"Moderate",l1:"Watch",rise:"River discharge expected to rise",wit
 adv:"Move valuables up, prepare torch/medicine/water, follow DDPM 1784",floodBanner:"⚠ Flood alert: ",prov:"provinces (tap to view)",
 notifBtn:"🔔 Enable device notifications",notifOn:"🔔 Notifications enabled",hub:"Open Google Flood Hub map ↗",
 gateMsg:"This page uses Google Maps and needs an API key (Maps JavaScript API enabled). Paste it once; it is remembered on this device.",gateSave:"Save and open map",gateBad:"Key rejected. Check the key, API enablement and referrer restrictions, then retry.",
-routeH:"🧭 Route / check along the way",rFrom:"Start (blank = current location)",rTo:"Destination: place name / coordinates / Google Maps link",mDrive:"🚗 Drive",mWalk:"🚶 Walk",mTransit:"🚌 Transit",rGo:"Find route and check",rClear:"Clear",traffic:"Live traffic",rHere:"Current location",rNeedTo:"Please enter a destination",rNoPlace:"Place not found",rShort:"Short links (maps.app.goo.gl) cannot be read. Open the link and copy the full URL, or paste coordinates like 13.75, 100.50",rFail:"Could not compute a route. Check that Directions API (or Routes API) and Geocoding API are enabled for the key.",rOut:"Start or destination is outside Thailand",rSum:"Distance",rEta:"Arrive about",tr:"Traffic",trNormal:"Normal",trNow:"Now",trFree:"Clear",trSlow:"Slightly busy",trJam:"Congested",trHeavy:"Heavy jam",trNA:"No traffic data for this mode (turn on Live traffic to see colors on the map)",wH:"Rain / storm / wind along the way (at your arrival time at each point)",wNone:"No heavy rain, storm or strong wind found along the route for your travel time",wStorm:"Thunderstorm",wHeavy:"Heavy rain",wMod:"Moderate rain",wLight:"Light rain",wGust:"Strong gusts",fH:"Flood near the route",fNone:"No flood alert near the route (province-level check)",aH:"Accidents / road closures",aNote:"No public real-time accident source is available here. Open in Google Maps to see user-reported incidents, or call 1193 (Highway Police) / 1586 (Dept. of Highways)",aOpen:"Open this route in Google Maps ↗",km:"km",min:"min",hr:"h",near:"away",goHere:"🧭 Go here",viaT:"via",altN:"Route",at:"near"}};
+routeH:"🧭 Route / check along the way",rFrom:"Start (blank = current location)",rTo:"Destination: place name / coordinates / Google Maps link",mDrive:"🚗 Drive",mWalk:"🚶 Walk",mTransit:"🚌 Transit",rGo:"Find route and check",rClear:"Clear",traffic:"Live traffic",rHere:"Current location",rNeedTo:"Please enter a destination",rNoPlace:"Place not found",rShort:"Short links (maps.app.goo.gl) cannot be read. Open the link and copy the full URL, or paste coordinates like 13.75, 100.50",rFail:"Could not compute a route. Check that Directions API (or Routes API) and Geocoding API are enabled for the key.",rOut:"Start or destination is outside Thailand",rSum:"Distance",rEta:"Arrive about",tr:"Traffic",trNormal:"Normal",trNow:"Now",trFree:"Clear",trSlow:"Slightly busy",trJam:"Congested",trHeavy:"Heavy jam",trNA:"No traffic data for this mode (turn on Live traffic to see colors on the map)",wH:"Rain / storm / wind along the way (at your arrival time at each point)",wNone:"No heavy rain, storm or strong wind found along the route for your travel time",wStorm:"Thunderstorm",wHeavy:"Heavy rain",wMod:"Moderate rain",wLight:"Light rain",wGust:"Strong gusts",fH:"Flood near the route",fNone:"No flood alert near the route (province-level check)",aH:"Accidents / road closures",aNote:"No public real-time accident source is available here. Open in Google Maps to see user-reported incidents, or call 1193 (Highway Police) / 1586 (Dept. of Highways)",aOpen:"Open this route in Google Maps ↗",km:"km",min:"min",hr:"h",near:"away",goHere:"🧭 Go here",viaT:"via",altN:"Route",at:"near",
+dashH:"📊 Current situation",dMm:"Rain next 24h (mm)",dP:"Max rain chance",dT:"Temperature now (°C)",dBarsT:"Hourly rain, next 24h (darker = higher chance)",
+dRiverT:"💧 River discharge (model)",dRiverNote:"Discharge compared with the previous 7-day average, not water level versus embankment from gauge stations. See real gauges under official sources (NDWC).",dNoRiver:"No major-river data at this point",
+st0:"Normal",dPast:"Past 7 days",dFcst:"5-day forecast",fc3:"📅 3-day forecast",rk0:"No rain",rk1:"Light–moderate rain",rk2:"Heavy rain",rk3:"Very heavy rain",
+wcClear:"Clear",wcPart:"Partly cloudy",wcCloud:"Cloudy",wcFog:"Fog",wcDrizzle:"Drizzle",wcRain:"Rain",wcShower:"Showers",wcStorm:"Thunderstorm",
+menuMap:"🗺 Flood map",menuRadar:"🌧 Rain radar",menuFc:"📅 3-day forecast",menuRoute:"🧭 Route check",menuTel:"📞 Emergency",menuSrc:"🔗 Official data",avg:"7-day avg",peakL:"Expected peak"}};
 let lang="th";try{lang=localStorage.getItem("lang")||"th"}catch(e){}
 const t=k=>T[lang][k]||k, loc=()=>lang==="th"?"th-TH":"en-GB";
 function applyLang(){
@@ -372,7 +418,7 @@ $("locate").onclick=()=>{
   if(!navigator.geolocation){alert(t("nogeo"));return}
   navigator.geolocation.getCurrentPosition(p=>{const ll={lat:p.coords.latitude,lng:p.coords.longitude};
     if(!inTH(ll.lat,ll.lng)){alert(t("outTH"));return}
-    map.panTo(ll);map.setZoom(11);queryPoint(ll)},()=>alert(t("nogeo")),{enableHighAccuracy:true,timeout:15000});
+    map.panTo(ll);map.setZoom(11);queryPoint(ll);setProv(C.indexOf(nearProv(ll)),false)},()=>alert(t("nogeo")),{enableHighAccuracy:true,timeout:15000});
 };
 $("saveKey").onclick=()=>{try{localStorage.setItem("firmsKey",$("firmsKey").value.trim())}catch(e){}};
 try{$("firmsKey").value=localStorage.getItem("firmsKey")||""}catch(e){}
@@ -504,12 +550,71 @@ $("rGo").onclick=goRoute;
 $("rClear").onclick=()=>{RT.lines.forEach(l=>l.setMap(null));RT.marks.forEach(m=>m.setMap(null));RT.lines=[];RT.marks=[];RT.routes=[];$("rOut").innerHTML="";$("rFrom").value="";$("rTo").value=""};
 window.setDest=(la,lo)=>{$("rTo").value=la.toFixed(5)+", "+lo.toFixed(5);iw.close();goRoute()};
 
+// ===== แดชบอร์ดสถานการณ์ (เลือกจังหวัดได้) =====
+const WC=c=>c>=95?["⛈",t("wcStorm")]:c>=80?["🌧",t("wcShower")]:c>=61?["🌧",t("wcRain")]:c>=51?["🌦",t("wcDrizzle")]:c>=45?["🌫",t("wcFog")]:c>=4?["☁️",t("wcCloud")]:c>=1?["⛅",t("wcPart")]:["☀️",t("wcClear")];
+let curP=0;try{curP=Math.min(76,Math.max(0,+localStorage.getItem("prov")||0))}catch(e){}
+[...C.keys()].sort((a,b)=>nm(C[a]).localeCompare(nm(C[b]),lang)).forEach(i=>{const o=document.createElement("option");o.value=i;o.textContent=nm(C[i]);$("prov").appendChild(o)});
+$("prov").value=curP;
+let lastDash=0;
+function setProv(i,fly=true){curP=i;$("prov").value=i;try{localStorage.setItem("prov",i)}catch(e){}
+  if(fly){map.panTo({lat:C[i][2],lng:C[i][3]});map.setZoom(9)}lastDash=Date.now();loadDash()}
+$("prov").onchange=e=>setProv(+e.target.value);
+function rainBars(v,p){
+  const W=300,H=60,mx=Math.max(5,...v),bw=W/v.length;
+  return `<svg viewBox="0 0 ${W} ${H+14}" width="100%" role="img" aria-label="${t("dBarsT")}">`+v.map((x,i)=>{const bh=Math.max(1.5,x/mx*H);
+    return `<rect x="${(i*bw+1).toFixed(1)}" y="${(H-bh).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="#38bdf8" opacity="${(.3+.7*(p[i]||0)/100).toFixed(2)}"><title>+${i}h · ${x.toFixed(1)} ${t("mm")} · ${p[i]||0}%</title></rect>`}).join("")
+    +`<text x="0" y="${H+12}" font-size="9" fill="#8fa6b8">${t("trNow")}</text><text x="${W}" y="${H+12}" font-size="9" text-anchor="end" fill="#8fa6b8">+24h</text></svg>`}
+function riverBars(v){
+  const W=300,H=60,base=v.slice(0,7).reduce((a,b)=>a+b,0)/7,mx=Math.max(base*1.2,...v,1),bw=W/v.length;
+  const col=(x,i)=>{if(i<7)return"#6b8296";const r=base>0?x/base:0;return r>=3?"#e5484d":r>=2?"#f2711c":r>=1.5?"#f5c518":"#2ec4a6"};
+  return `<svg viewBox="0 0 ${W} ${H+14}" width="100%" role="img" aria-label="${t("dRiverT")}">`+v.map((x,i)=>{const bh=Math.max(1.5,x/mx*H);
+    return `<rect x="${(i*bw+2).toFixed(1)}" y="${(H-bh).toFixed(1)}" width="${(bw-4).toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${col(x,i)}"><title>${x.toFixed(1)} m³/s</title></rect>`}).join("")
+    +`<line x1="0" x2="${W}" y1="${(H-base/mx*H).toFixed(1)}" y2="${(H-base/mx*H).toFixed(1)}" stroke="#8fa6b8" stroke-dasharray="3 3" stroke-width="1"/>`
+    +`<text x="0" y="${H+12}" font-size="9" fill="#8fa6b8">${t("dPast")}</text><text x="${W}" y="${H+12}" font-size="9" text-anchor="end" fill="#8fa6b8">${t("dFcst")}</text></svg>`}
+async function loadDash(){
+  const c=C[curP];$("dProv").textContent=nm(c);
+  const [w,f]=await Promise.allSettled([
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${c[2]}&longitude=${c[3]}&current=temperature_2m&hourly=precipitation,precipitation_probability&forecast_hours=24&daily=weather_code,precipitation_sum,precipitation_probability_max,temperature_2m_max,temperature_2m_min&forecast_days=3&timezone=Asia%2FBangkok`).then(r=>r.json()),
+    fetch(`https://flood-api.open-meteo.com/v1/flood?latitude=${c[2]}&longitude=${c[3]}&daily=river_discharge&past_days=7&forecast_days=5`).then(r=>r.json())]);
+  if(w.status==="fulfilled"&&w.value.hourly){
+    const d=w.value,v=d.hourly.precipitation.map(x=>x||0),p=d.hourly.precipitation_probability.map(x=>x||0),mm=v.reduce((a,b)=>a+b,0);
+    $("dMm").textContent=mm.toFixed(1);$("dP").textContent=Math.max(0,...p)+"%";
+    $("dT").textContent=d.current&&d.current.temperature_2m!=null?Math.round(d.current.temperature_2m):"–";
+    const rk=mm<.5?0:mm<10?1:mm<35?2:3;
+    $("dRisk").textContent=t("rk"+rk);$("dRisk").className="badge bg"+(rk===0?0:rk);
+    $("dBars").innerHTML=rainBars(v,p);
+    const dy=d.daily;
+    $("dFc").innerHTML=dy.time.map((day,i)=>{const [ic,lb]=WC(dy.weather_code[i]);
+      return `<div class="fcrow"><b>${new Date(day+"T12:00:00").toLocaleDateString(loc(),{weekday:"short",day:"numeric",month:"short"})}</b><span>${ic} ${esc(lb)}<br><small style="color:var(--mute)">${(dy.precipitation_sum[i]||0).toFixed(1)} ${t("mm")} · ${dy.precipitation_probability_max[i]||0}%</small></span><span>${Math.round(dy.temperature_2m_max[i])}° / ${Math.round(dy.temperature_2m_min[i])}°</span></div>`}).join("");
+  }else{$("dBars").innerHTML=`<p class="note">${t("fail")}</p>`}
+  const rs=$("dRStat");
+  const val=f.status==="fulfilled"&&f.value.daily?(f.value.daily.river_discharge||[]).map(x=>x==null?null:x):[];
+  if(val.length>=12&&val.every(x=>x!=null)){
+    const base=val.slice(0,7).reduce((a,b)=>a+b,0)/7,peak=Math.max(...val.slice(7)),ratio=base>0?peak/base:0;
+    if(base<1){$("dRiver").innerHTML=`<p class="note">${t("dNoRiver")}</p>`;rs.textContent="";rs.className="badge"}
+    else{const lv=ratio>=3?3:ratio>=2?2:ratio>=1.5?1:0;
+      rs.textContent=lv?t("l"+lv):t("st0");rs.className="badge bg"+lv;
+      $("dRiver").innerHTML=riverBars(val)+`<div class="note" style="margin-top:4px">${t("avg")} ${base.toFixed(0)} m³/s → ${t("peakL")} ${peak.toFixed(0)} m³/s (${ratio.toFixed(1)}×)</div>`}
+  }else{$("dRiver").innerHTML=`<p class="note">${t("dNoRiver")}</p>`;rs.textContent="";rs.className="badge"}
+}
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{
+  const g=b.dataset.go,go=id=>$(id).scrollIntoView({behavior:"smooth",block:"start"}),mw=document.querySelector(".mapwrap");
+  if(g==="map"){const c=$("l-flood");if(!c.checked){c.checked=true;c.dispatchEvent(new Event("change"))}
+    map.panTo({lat:C[curP][2],lng:C[curP][3]});map.setZoom(9);mw.scrollIntoView({behavior:"smooth"})}
+  else if(g==="radar"){const c=$("l-radar");if(!c.checked){c.checked=true;c.dispatchEvent(new Event("change"))}mw.scrollIntoView({behavior:"smooth"})}
+  else if(g==="fc")go("secFc");
+  else if(g==="route"){go("secRoute");$("rTo").focus({preventScroll:true})}
+  else if(g==="tel")go("secTel");
+  else if(g==="src")go("secSrc")});
+loadDash();lastDash=Date.now();
+
 let lastRain=0,lastFlood=0;
 async function refresh(){
   if(document.hidden)return;
   const n=Date.now(),jobs=[loadSat(),loadQuake()];
   if(n-lastRain>20*60*1000){lastRain=n;jobs.push(loadRain())}
   if(n-lastFlood>60*60*1000){lastFlood=n;jobs.push(loadFlood())}
+  if(n-lastDash>10*60*1000){lastDash=n;jobs.push(loadDash())}
   await Promise.all(jobs);
   $("stamp").textContent=t("upd")+" "+new Date().toLocaleTimeString(loc())+" · "+t("every");
 }
