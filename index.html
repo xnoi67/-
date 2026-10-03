@@ -105,7 +105,7 @@ const LABEL={power:"ไฟฟ้าดับ",help:"ขอความช่ว�
 const $=id=>document.getElementById(id);
 const esc=s=>String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const map=L.map("map",{zoomControl:true}).setView([13.2,101.0],6);
-L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{subdomains:"abcd",maxZoom:19,attribution:"© OpenStreetMap contributors © CARTO"}).addTo(map);
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:18,attribution:"Tiles © Esri"}).addTo(map);
 const G={radar:L.layerGroup(),rain:L.layerGroup(),flood:L.layerGroup(),fire:L.layerGroup(),rep:L.layerGroup()};
 Object.entries(G).forEach(([k,g])=>{$("l-"+k).checked&&g.addTo(map);$("l-"+k).onchange=e=>e.target.checked?g.addTo(map):map.removeLayer(g)});
 const stat={};
