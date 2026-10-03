@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://maps.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a1a28;--panel:#0e2233;--card:#14304a;--ink:#e8f1f8;--mute:#8fa6b8;--line:#23425c;--rain:#38bdf8;--fire:#e8480c;--flood:#0b8f8a;--quake:#a678e8;color-scheme:dark}
+:root{--bg:#eef3f7;--panel:#ffffff;--card:#ffffff;--ink:#10202e;--mute:#4d5d6a;--line:#b9c7d3;--rain:#1c78d6;--fire:#e8480c;--flood:#d93025;--quake:#7b3fc4;color-scheme:light}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0}
 .ch{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;margin-bottom:8px}
 .kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-bottom:8px}
@@ -59,14 +59,31 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
 #gate{position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:16px}
 #gate div{background:var(--panel);border-radius:12px;padding:18px;max-width:430px;width:100%;display:grid;gap:8px}
 #gate p{margin:0;font-size:14px;line-height:1.5}
-@media(max-width:760px){main{flex-direction:column}aside{width:100%;border-left:0;border-top:1px solid var(--line);height:42vh;flex:none}h1{font-size:15px}}
+@media(max-width:760px){main{flex-direction:column}aside{width:100%;border-left:0;border-top:1px solid var(--line);height:48vh;flex:none}h1{font-size:15px}}
+body{font-size:18px}h1{font-size:21px}aside{width:410px;font-size:17px}aside h2{font-size:19px}
+button,select,input{min-height:48px;font-size:17px}button{background:#0b63c5}
+.note{font-size:15px}.kpi small{font-size:14px}.kpi b{font-size:26px}.badge{font-size:15px;padding:3px 11px}
+.fcrow{font-size:16px;grid-template-columns:92px 1fr auto}.fi{font-size:16px}.alt{font-size:16px}
+.menu button{font-size:17px;min-height:56px}.tel a{font-size:17px;padding:11px 15px}#tsu,#fbn{font-size:17px}
+.big{display:flex;gap:12px;align-items:center;border-radius:14px;padding:14px;margin:0 0 10px;color:#fff}
+.big.ok{background:#1e7d4f}.big.warn{background:#a86a00}.big.bad{background:#b3141f}
+#bigIcon{font-size:40px;line-height:1}#bigTitle{font-weight:700;font-size:21px;line-height:1.3}#bigSub{font-size:16px;line-height:1.4;margin-top:2px}
+.acts{display:grid;gap:8px;margin-bottom:10px}
+.acts button,.acts a{display:flex;align-items:center;justify-content:center;min-height:56px;border-radius:12px;font-size:18px;font-weight:700;text-decoration:none;text-align:center;padding:8px;color:#fff}
+.acts .red{background:#d93025}.acts a{background:#1e7d4f}.acts a.c2{background:#b3141f}
+details.adv{margin:12px 0;border:1px solid var(--line);border-radius:12px;padding:0 12px;background:var(--card)}
+details.adv summary{cursor:pointer;font-weight:700;padding:14px 0;font-size:18px}
+details.adv[open] summary{border-bottom:1px solid var(--line);margin-bottom:8px}
+#legend{position:absolute;left:10px;top:12px;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:15px;line-height:1.4;max-width:min(560px,calc(100% - 70px));box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.fl-lbl{text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 5px #fff;white-space:nowrap}
+@media(max-width:760px){h1{font-size:17px}#legend{font-size:13px}}
 </style>
 </head>
 <body>
 <header>
   <h1 data-t="title"></h1>
   <div style="display:flex;gap:8px;align-items:center">
-    <select id="prov" aria-label="province" style="max-width:160px"></select><span id="stamp"></span>
+    <label for="prov" data-t="provL" style="font-weight:700"></label><select id="prov" aria-label="province"></select><span id="stamp"></span>
     <button class="sec" id="lang" style="padding:3px 10px"></button>
   </div>
 </header>
@@ -75,9 +92,16 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
 <main>
   <div class="mapwrap">
     <div id="map"></div>
+    <div id="legend" data-t="legend"></div>
     <div id="anim"><button id="play" aria-label="play/pause">⏸</button><span id="ftime"></span></div>
   </div>
   <aside>
+    <div id="big" class="big ok"><div id="bigIcon">⏳</div><div><div id="bigTitle" data-t="checking"></div><div id="bigSub"></div></div></div>
+    <div class="acts">
+      <button id="aLoc" data-t="aLoc"></button>
+      <button id="aGoogle" class="red" data-t="aGoogle"></button>
+      <a href="tel:1784" data-t="aCall1"></a><a href="tel:1669" class="c2" data-t="aCall2"></a>
+    </div>
     <h2 data-t="dashH"></h2>
     <div class="card">
       <div class="ch"><span id="dProv"></span><span id="dRisk" class="badge"></span></div>
@@ -104,7 +128,7 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
     </div>
     <div class="card" id="secFc"><div class="ch" data-t="fc3"></div><div id="dFc"></div></div>
 
-    <h2 id="secRoute" data-t="routeH"></h2>
+    <details class="adv" id="dRoute"><summary data-t="advRoute"></summary><h2 id="secRoute" data-t="routeH"></h2>
     <div class="form">
       <input id="rFrom" data-p="rFrom" autocomplete="off">
       <input id="rTo" data-p="rTo" autocomplete="off">
@@ -112,7 +136,7 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
       <div style="display:flex;gap:6px"><button id="rGo" style="flex:1" data-t="rGo"></button><button class="sec" id="rClear" data-t="rClear"></button></div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="l-traffic"><span data-t="traffic"></span><span class="src">Google</span></label>
     </div>
-    <div id="rOut"></div>
+    <div id="rOut"></div></details>
 
     <h2 data-t="floodH"></h2>
     <div id="fl"><p class="note" data-t="checking"></p></div>
@@ -121,7 +145,7 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
       <a class="note" href="https://sites.research.google/floods" target="_blank" rel="noopener noreferrer" data-t="hub"></a>
     </div>
 
-    <h2 data-t="layers"></h2>
+    <details class="adv"><summary data-t="advLayers"></summary><h2 data-t="layers"></h2>
     <div class="lay">
       <label><input type="checkbox" id="l-flood" checked><span class="dot" style="background:var(--flood)"></span><span data-t="flood"></span><span class="src">Open-Meteo</span></label>
       <label><input type="checkbox" id="l-rain" checked><span class="dot" style="background:var(--rain)"></span><span data-t="rain"></span><span class="src">Open-Meteo</span></label>
@@ -136,7 +160,7 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
       <input id="firmsKey" data-p="key" autocomplete="off" maxlength="64">
       <button class="sec" id="saveKey" data-t="keyBtn"></button>
     </div>
-    <div class="note" id="st" style="margin-top:6px"></div>
+    <div class="note" id="st" style="margin-top:6px"></div></details>
 
     <h2 id="secTel" data-t="emerg"></h2>
     <div class="tel">
@@ -166,11 +190,11 @@ const REFRESH_MS=60*1000;
 
 // ===== ภาษา =====
 const T={th:{
-title:"แผนที่เฝ้าระวังภัย ประเทศไทย",layers:"ชั้นข้อมูล",radar:"เรดาร์ฝน (เคลื่อนไหว)",sat:"เมฆดาวเทียมอินฟราเรด",fire:"จุดความร้อน/ไฟไหม้ 24 ชม.",quake:"แผ่นดินไหว/สึนามิ",rain:"ฝนใกล้ตก 3 ชม.",flood:"แจ้งเตือนน้ำท่วม/น้ำหลาก",
+title:"แผนที่เฝ้าระวังภัย ประเทศไทย",provL:"จังหวัด:",aLoc:"📍 ตรวจที่ที่ฉันอยู่ตอนนี้",aGoogle:"🌊 ดูแผนที่น้ำท่วมของ Google",aCall1:"📞 โทร 1784 ขอความช่วยเหลือน้ำท่วม (ปภ.)",aCall2:"🚑 โทร 1669 เจ็บป่วยฉุกเฉิน",advRoute:"🧭 วางแผนเส้นทาง (แตะเพื่อเปิด)",advLayers:"⚙ ตั้งค่าแผนที่เพิ่มเติม (แตะเพื่อเปิด)",bigOk:"ปลอดภัย ยังไม่พบสัญญาณน้ำท่วม",bigSubOk:"ฝนและน้ำในแม่น้ำอยู่ในเกณฑ์ปกติ",bigWatch:"เฝ้าระวัง",bigDanger:"เสี่ยงน้ำท่วมสูง",bigHeavy:"ฝนหนักมาก ระวังน้ำท่วมขัง",bigSubRain:"ฝนตกหนัก ระวังน้ำท่วมขังและถนนลื่น ติดตามประกาศ",bigOther:"จังหวัดอื่นที่เสี่ยง:",prov2:"จังหวัด",flTxt:"เสี่ยงน้ำท่วม จ.",whyRain:"ฝนสะสมสูง (3 วันก่อน–2 วันข้างหน้า)",legend:"🔴 วงกลมแดง = พื้นที่เสี่ยงน้ำท่วม · 🔵 จุดฟ้า = ฝนกำลังตก · แตะจุดเพื่อดูรายละเอียด",layers:"ชั้นข้อมูล",radar:"เรดาร์ฝน (เคลื่อนไหว)",sat:"เมฆดาวเทียมอินฟราเรด",fire:"จุดความร้อน/ไฟไหม้ 24 ชม.",quake:"แผ่นดินไหว/สึนามิ",rain:"ฝนใกล้ตก 3 ชม.",flood:"แจ้งเตือนน้ำท่วม/น้ำหลาก",
 locate:"📍 ตรวจที่ตำแหน่งของฉัน",tapHint:"แตะจุดใดก็ได้ในประเทศไทยเพื่อตรวจฝน/ไฟ/ชื่อสถานที่",key:"NASA FIRMS MAP_KEY (ฟรี) เพื่อนับจุดไฟตรงที่แตะ",keyBtn:"บันทึกคีย์",
 emerg:"เบอร์ฉุกเฉิน",official:"ข้อมูลทางการ",
 t191:"191 ตำรวจ",t199:"199 ดับเพลิง",t1669:"1669 การแพทย์ฉุกเฉิน",t1784:"1784 ปภ.",t1129:"1129 PEA ไฟดับ",t1130:"1130 MEA ไฟดับ",
-limit:"ข้อจำกัด: ไฟดับและการขอความช่วยเหลือไม่มีข้อมูลสาธารณะแบบ real time จึงไม่แสดง ให้ดูที่ PEA/MEA และหน่วยงานกู้ภัย การแจ้งเตือนน้ำท่วมคำนวณจากแบบจำลองปริมาณน้ำในแม่น้ำ (Open-Meteo/GloFAS) ไม่ใช่ประกาศทางการ เตือนสึนามิอ้างอิงข้อมูลแผ่นดินไหว USGS กรณีฉุกเฉินให้โทรเบอร์ด้านบนและทำตามประกาศของหน่วยงานรัฐ",
+limit:"ข้อจำกัด: ไฟดับและการขอความช่วยเหลือไม่มีข้อมูลสาธารณะแบบ real time จึงไม่แสดง ให้ดูที่ PEA/MEA และหน่วยงานกู้ภัย การแจ้งเตือนน้ำท่วมคำนวณจากแบบจำลองปริมาณน้ำในแม่น้ำ (Open-Meteo/GloFAS) และปริมาณฝนสะสม ไม่ใช่ประกาศทางการ เตือนสึนามิอ้างอิงข้อมูลแผ่นดินไหว USGS กรณีฉุกเฉินให้โทรเบอร์ด้านบนและทำตามประกาศของหน่วยงานรัฐ",
 upd:"อัปเดตล่าสุด",every:"รีเฟรชทุก 1 นาที",checking:"กำลังตรวจสอบ…",nowRain:"ตอนนี้ฝนกำลังตก",noRain:"ตอนนี้ยังไม่มีฝน",next3:"3 ชม.ข้างหน้า",prob:"โอกาสตก",mm:"มม.",fail:"ดึงข้อมูลไม่สำเร็จ",
 fireN:"จุดไฟใน 24 ชม. ภายในรัศมี ~25 กม.:",fireKey:"ใส่คีย์ FIRMS เพื่อนับจุดไฟตรงนี้",
 tsuT:"⚠ แจ้งเตือน: แผ่นดินไหวที่อาจก่อสึนามิ (24 ชม.ล่าสุด)",tsuOK:"แผ่นดินไหว: ไม่พบเหตุใหญ่ใกล้ไทยใน 24 ชม.",tsuNote:"ข้อมูลจาก USGS ไม่ใช่ประกาศทางการ ตรวจสอบ",mag:"ขนาด",
@@ -187,7 +211,7 @@ st0:"ปกติ",dPast:"7 วันก่อน",dFcst:"พยากรณ์ 
 wcClear:"แจ่มใส",wcPart:"มีเมฆบางส่วน",wcCloud:"เมฆมาก",wcFog:"หมอก",wcDrizzle:"ฝนปรอย",wcRain:"ฝนตก",wcShower:"ฝนซู่",wcStorm:"พายุฝนฟ้าคะนอง",
 menuMap:"🗺 แผนที่น้ำท่วม",menuRadar:"🌧 เรดาร์ฝน",menuFc:"📅 พยากรณ์ 3 วัน",menuRoute:"🧭 ตรวจเส้นทาง",menuTel:"📞 เบอร์ฉุกเฉิน",menuSrc:"🔗 ข้อมูลทางการ",avg:"เฉลี่ย 7 วันก่อน",peakL:"คาดสูงสุด"},
 en:{
-title:"Thailand Hazard Watch Map",layers:"Layers",radar:"Rain radar (animated)",sat:"Infrared cloud satellite",fire:"Fire hotspots, last 24h",quake:"Earthquakes / tsunami",rain:"Rain next 3h",flood:"Flood alerts",
+title:"Thailand Hazard Watch Map",provL:"Province:",aLoc:"📍 Check where I am now",aGoogle:"🌊 Open Google flood map",aCall1:"📞 Call 1784 flood help (DDPM)",aCall2:"🚑 Call 1669 medical emergency",advRoute:"🧭 Route planner (tap to open)",advLayers:"⚙ More map settings (tap to open)",bigOk:"Safe, no flood signal",bigSubOk:"Rain and rivers are normal",bigWatch:"Watch",bigDanger:"High flood risk",bigHeavy:"Very heavy rain, watch for flooding",bigSubRain:"Heavy rain: watch for standing water and slippery roads",bigOther:"Other provinces at risk:",prov2:"provinces",flTxt:"Flood risk:",whyRain:"High accumulated rain (past 3 days to next 2)",legend:"🔴 Red circle = flood-risk area · 🔵 Blue dot = raining · tap a dot for details",layers:"Layers",radar:"Rain radar (animated)",sat:"Infrared cloud satellite",fire:"Fire hotspots, last 24h",quake:"Earthquakes / tsunami",rain:"Rain next 3h",flood:"Flood alerts",
 locate:"📍 Check my location",tapHint:"Tap anywhere in Thailand to check rain, fire and place name",key:"NASA FIRMS MAP_KEY (free) to count fires where you tap",keyBtn:"Save key",
 emerg:"Emergency numbers",official:"Official sources",
 t191:"191 Police",t199:"199 Fire",t1669:"1669 Medical",t1784:"1784 Disaster (DDPM)",t1129:"1129 PEA outage",t1130:"1130 MEA outage",
@@ -246,7 +270,7 @@ let map=new google.maps.Map($("map"),{
   center:{lat:13.2,lng:101},zoom:6,minZoom:5,maxZoom:18,
   mapId:"DEMO_MAP_ID",              // แผนที่เวกเตอร์ของ Google ซูมลื่น เรนเดอร์ด้วย GPU
   restriction:{latLngBounds:{north:21.5,south:4.8,west:96.5,east:106.5},strictBounds:true},
-  gestureHandling:"greedy",clickableIcons:false,streetViewControl:false,fullscreenControl:true,mapTypeControl:true,
+  gestureHandling:"greedy",clickableIcons:false,streetViewControl:false,fullscreenControl:true,mapTypeControl:false,
   mapTypeControlOptions:{style:google.maps.MapTypeControlStyle.DROPDOWN_MENU}
 });
 map.fitBounds(TH,0);
@@ -334,7 +358,7 @@ let floods=[];
 function showFlood(f){
   map.panTo({lat:f.c[2],lng:f.c[3]});map.setZoom(Math.max(map.getZoom(),9));
   iw.setPosition({lat:f.c[2],lng:f.c[3]});
-  iw.setContent(`<div style="max-width:240px;font-family:inherit"><b style="color:${LV[f.lv]}">⚠ ${t("flood")} · ${t("l"+f.lv)}</b><br><b>${esc(nm(f.c))}</b><br>${t("rise")} ≈ ${f.ratio.toFixed(1)}× ${t("within")}<br><small>${t("adv")}</small><br><a href="https://sites.research.google/floods" target="_blank" rel="noopener noreferrer">Google Flood Hub ↗</a></div>`);
+  iw.setContent(`<div style="max-width:240px;font-family:inherit"><b style="color:${LV[f.lv]}">⚠ ${t("flood")} · ${t("l"+f.lv)}</b><br><b>${esc(nm(f.c))}</b><br>${whyTxt(f)}<br><small>${t("adv")}</small><br><a href="https://sites.research.google/floods" target="_blank" rel="noopener noreferrer">Google Flood Hub ↗</a></div>`);
   iw.open(map);
 }
 function renderFlood(){
@@ -342,7 +366,7 @@ function renderFlood(){
   if(!floods.length){box.innerHTML=`<p class="note">${t("noFlood")}</p>`;ban.style.display="none";return}
   box.innerHTML="";
   floods.forEach(f=>{const d=document.createElement("div");d.className="fi l"+f.lv;d.tabIndex=0;
-    d.innerHTML=`<div style="flex:1"><b>${esc(nm(f.c))}</b><small>${t("rise")} ≈ ${f.ratio.toFixed(1)}×</small></div><span class="badge">${t("l"+f.lv)}</span>`;
+    d.innerHTML=`<div style="flex:1"><b>${esc(nm(f.c))}</b><small>${whyTxt(f)}</small></div><span class="badge">${t("l"+f.lv)}</span>`;
     d.onclick=()=>showFlood(f);d.onkeydown=e=>{if(e.key==="Enter")showFlood(f)};box.appendChild(d)});
   const hi=floods.filter(f=>f.lv>=2);
   if(hi.length){ban.style.display="block";ban.textContent=t("floodBanner")+hi.length+" "+t("prov");ban.onclick=()=>showFlood(hi[0])}else ban.style.display="none";
@@ -352,28 +376,53 @@ function pushNotify(){
   let seen={};try{seen=JSON.parse(localStorage.getItem("fseen")||"{}")}catch(e){}
   const day=new Date().toDateString();
   floods.filter(f=>f.lv>=2).forEach(f=>{const id=f.c[1]+f.lv;if(seen[id]===day)return;seen[id]=day;
-    try{new Notification(t("floodBanner")+nm(f.c)+" ("+t("l"+f.lv)+")",{body:t("rise")+" ≈ "+f.ratio.toFixed(1)+"×"})}catch(e){}});
+    try{new Notification(t("floodBanner")+nm(f.c)+" ("+t("l"+f.lv)+")",{body:whyTxt(f)})}catch(e){}});
   try{localStorage.setItem("fseen",JSON.stringify(seen))}catch(e){}
 }
 $("notif").onclick=async()=>{
   if(!("Notification" in window))return;
   const p=await Notification.requestPermission();
   if(p==="granted"){$("notif").textContent=t("notifOn");pushNotify()}};
+let lastRk=0;
+const FLI={};
+function fIcon(lv){
+  if(FLI[lv])return FLI[lv];
+  const col=lv===3?"#b3141f":lv===2?"#d93025":"#e37400",R=lv>=2?26:20;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><circle cx="30" cy="30" r="${R}" fill="${col}" opacity=".2"/><circle cx="30" cy="30" r="15" fill="${col}" stroke="#fff" stroke-width="2.5"/><g fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M22 25q2-2 4 0t4 0t4 0t4 0"/><path d="M22 30q2-2 4 0t4 0t4 0t4 0"/><path d="M22 35q2-2 4 0t4 0t4 0t4 0"/></g></svg>`;
+  return FLI[lv]={url:"data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg),scaledSize:new google.maps.Size(60,60),anchor:new google.maps.Point(30,30),labelOrigin:new google.maps.Point(30,58)}}
+function flLabels(){const show=map.getZoom()>=7||MK.flood.length<=8;MK.flood.forEach(m=>m.setLabel(show?m._lab:null))}
+map.addListener("zoom_changed",flLabels);
+function whyTxt(f){const a=[];if(f.why.includes("river"))a.push(t("rise")+" ≈ "+f.ratio.toFixed(1)+"×");if(f.why.includes("rain"))a.push(t("whyRain")+" "+Math.round(f.rain)+" "+t("mm"));return a.join(" · ")}
+function updateBig(){
+  const c=C[curP],f=floods.find(x=>x.c===c),others=floods.filter(x=>x.c!==c).length;
+  let k="ok",ic="✅",ti=t("bigOk"),su=t("bigSubOk");
+  if(f&&f.lv>=2){k="bad";ic="🚨";ti=t("bigDanger");su=whyTxt(f)+" · "+t("adv")}
+  else if(lastRk>=3){k="bad";ic="🌧";ti=t("bigHeavy");su=t("bigSubRain")}
+  else if(f||lastRk===2){k="warn";ic="⚠️";ti=t("bigWatch");su=f?whyTxt(f):t("bigSubRain")}
+  if(others)su+=" · "+t("bigOther")+" "+others+" "+t("prov2");
+  $("big").className="big "+k;$("bigIcon").textContent=ic;$("bigTitle").textContent=nm(c)+" — "+ti;$("bigSub").textContent=su}
 async function loadFlood(){
   try{
-    const r=await (await fetch(`https://flood-api.open-meteo.com/v1/flood?latitude=${LA}&longitude=${LO}&daily=river_discharge&past_days=7&forecast_days=5`)).json();
-    const arr=[];floods=[];
-    (Array.isArray(r)?r:[r]).forEach((d,i)=>{
-      const v=(d.daily&&d.daily.river_discharge||[]).filter(x=>x!=null);if(v.length<8)return;
-      const base=v.slice(0,7).reduce((a,b)=>a+b,0)/7,peak=Math.max(...v.slice(7)),ratio=base>0?peak/base:0;
-      if(base<1||ratio<1.5)return;
-      const lv=ratio>=3?3:ratio>=2?2:1,f={c:C[i],ratio,lv};floods.push(f);
-      const m=new google.maps.Marker({position:{lat:C[i][2],lng:C[i][3]},zIndex:10+lv,optimized:true,
-        icon:{path:google.maps.SymbolPath.CIRCLE,scale:6+lv*2,fillColor:LV[lv],fillOpacity:.65,strokeColor:LV[lv],strokeWeight:1.5},
-        label:{text:"!",color:"#fff",fontWeight:"700",fontSize:"11px"}});
+    const [rv,rn]=await Promise.all([
+      fetch(`https://flood-api.open-meteo.com/v1/flood?latitude=${LA}&longitude=${LO}&daily=river_discharge&past_days=7&forecast_days=5`).then(r=>r.json()),
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${LA}&longitude=${LO}&daily=precipitation_sum&past_days=3&forecast_days=3&timezone=Asia%2FBangkok`).then(r=>r.json())]);
+    const A=x=>Array.isArray(x)?x:[x],RV=A(rv),RN=A(rn),arr=[];floods=[];
+    C.forEach((c,i)=>{
+      let lv=0,ratio=0,rain=0;const why=[];
+      const v=((RV[i]&&RV[i].daily&&RV[i].daily.river_discharge)||[]).filter(x=>x!=null);
+      if(v.length>=8){const base=v.slice(0,7).reduce((a,b)=>a+b,0)/7,peak=Math.max(...v.slice(7));ratio=base>0?peak/base:0;
+        if(base>=1&&ratio>=1.5){lv=ratio>=3?3:ratio>=2?2:1;why.push("river")}}
+      const ps=((RN[i]&&RN[i].daily&&RN[i].daily.precipitation_sum)||[]).map(x=>x||0);
+      rain=ps.reduce((a,b)=>a+b,0);const mx=Math.max(0,...ps);
+      const rl=rain>=220?3:rain>=140?2:(rain>=90||mx>=90)?1:0;
+      if(rl){lv=Math.max(lv,rl);why.push("rain")}
+      if(!lv)return;
+      const f={c,ratio,rain,lv,why};floods.push(f);
+      const m=new google.maps.Marker({position:{lat:c[2],lng:c[3]},zIndex:10+lv,optimized:false,icon:fIcon(lv)});
+      m._lab={text:t("flTxt")+" "+nm(c),color:"#b3141f",fontWeight:"700",fontSize:"15px",className:"fl-lbl"};
       m.addListener("click",()=>showFlood(f));arr.push(m)});
-    floods.sort((a,b)=>b.lv-a.lv||b.ratio-a.ratio);
-    setMk("flood",arr);renderFlood();pushNotify();
+    floods.sort((a,b)=>b.lv-a.lv||(b.rain+b.ratio*50)-(a.rain+a.ratio*50));
+    setMk("flood",arr);flLabels();renderFlood();updateBig();pushNotify();
   }catch(e){$("fl").innerHTML=`<p class="note">${t("fail")}</p>`}
 }
 
@@ -512,7 +561,7 @@ async function analyze(r){
   else if(!bad.length)h+=`<p class="note">✅ ${t("wNone")}</p>`;
   else h+=bad.slice(0,10).map(s=>mk(s.lv,`${hhmm(s.eta)} · ${t("at")} ${esc(nm(nearProv(s)))} (${s.km.toFixed(0)} ${t("km")})`,s.tx.join(" · "))).join("");
   h+=`<h3>🌊 ${t("fH")}</h3>`;
-  h+=fl.length?fl.sort((a,b)=>b.f.lv-a.f.lv).map(x=>mk(x.f.lv,esc(nm(x.f.c)),`${t("rise")} ≈ ${x.f.ratio.toFixed(1)}× · ${t("near")} ${x.km.toFixed(0)} ${t("km")}`)).join(""):`<p class="note">✅ ${t("fNone")}</p>`;
+  h+=fl.length?fl.sort((a,b)=>b.f.lv-a.f.lv).map(x=>mk(x.f.lv,esc(nm(x.f.c)),`${whyTxt(x.f)} · ${t("near")} ${x.km.toFixed(0)} ${t("km")}`)).join(""):`<p class="note">✅ ${t("fNone")}</p>`;
   h+=`<h3>🚧 ${t("aH")}</h3><p class="note">${t("aNote")}</p>`;
   h+=`<a class="note" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/dir/?api=1&origin=${RT.o.ll.lat},${RT.o.ll.lng}&destination=${RT.d.ll.lat},${RT.d.ll.lng}&travelmode=${RT.mode.toLowerCase()}">${t("aOpen")}</a>`;
   out.innerHTML=h;
@@ -563,14 +612,14 @@ function rainBars(v,p){
   const W=300,H=60,mx=Math.max(5,...v),bw=W/v.length;
   return `<svg viewBox="0 0 ${W} ${H+14}" width="100%" role="img" aria-label="${t("dBarsT")}">`+v.map((x,i)=>{const bh=Math.max(1.5,x/mx*H);
     return `<rect x="${(i*bw+1).toFixed(1)}" y="${(H-bh).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="#38bdf8" opacity="${(.3+.7*(p[i]||0)/100).toFixed(2)}"><title>+${i}h · ${x.toFixed(1)} ${t("mm")} · ${p[i]||0}%</title></rect>`}).join("")
-    +`<text x="0" y="${H+12}" font-size="9" fill="#8fa6b8">${t("trNow")}</text><text x="${W}" y="${H+12}" font-size="9" text-anchor="end" fill="#8fa6b8">+24h</text></svg>`}
+    +`<text x="0" y="${H+12}" font-size="9" fill="#4d5d6a">${t("trNow")}</text><text x="${W}" y="${H+12}" font-size="9" text-anchor="end" fill="#4d5d6a">+24h</text></svg>`}
 function riverBars(v){
   const W=300,H=60,base=v.slice(0,7).reduce((a,b)=>a+b,0)/7,mx=Math.max(base*1.2,...v,1),bw=W/v.length;
   const col=(x,i)=>{if(i<7)return"#6b8296";const r=base>0?x/base:0;return r>=3?"#e5484d":r>=2?"#f2711c":r>=1.5?"#f5c518":"#2ec4a6"};
   return `<svg viewBox="0 0 ${W} ${H+14}" width="100%" role="img" aria-label="${t("dRiverT")}">`+v.map((x,i)=>{const bh=Math.max(1.5,x/mx*H);
     return `<rect x="${(i*bw+2).toFixed(1)}" y="${(H-bh).toFixed(1)}" width="${(bw-4).toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${col(x,i)}"><title>${x.toFixed(1)} m³/s</title></rect>`}).join("")
-    +`<line x1="0" x2="${W}" y1="${(H-base/mx*H).toFixed(1)}" y2="${(H-base/mx*H).toFixed(1)}" stroke="#8fa6b8" stroke-dasharray="3 3" stroke-width="1"/>`
-    +`<text x="0" y="${H+12}" font-size="9" fill="#8fa6b8">${t("dPast")}</text><text x="${W}" y="${H+12}" font-size="9" text-anchor="end" fill="#8fa6b8">${t("dFcst")}</text></svg>`}
+    +`<line x1="0" x2="${W}" y1="${(H-base/mx*H).toFixed(1)}" y2="${(H-base/mx*H).toFixed(1)}" stroke="#4d5d6a" stroke-dasharray="3 3" stroke-width="1"/>`
+    +`<text x="0" y="${H+12}" font-size="9" fill="#4d5d6a">${t("dPast")}</text><text x="${W}" y="${H+12}" font-size="9" text-anchor="end" fill="#4d5d6a">${t("dFcst")}</text></svg>`}
 async function loadDash(){
   const c=C[curP];$("dProv").textContent=nm(c);
   const [w,f]=await Promise.allSettled([
@@ -580,7 +629,7 @@ async function loadDash(){
     const d=w.value,v=d.hourly.precipitation.map(x=>x||0),p=d.hourly.precipitation_probability.map(x=>x||0),mm=v.reduce((a,b)=>a+b,0);
     $("dMm").textContent=mm.toFixed(1);$("dP").textContent=Math.max(0,...p)+"%";
     $("dT").textContent=d.current&&d.current.temperature_2m!=null?Math.round(d.current.temperature_2m):"–";
-    const rk=mm<.5?0:mm<10?1:mm<35?2:3;
+    const rk=mm<.5?0:mm<10?1:mm<35?2:3;lastRk=rk;
     $("dRisk").textContent=t("rk"+rk);$("dRisk").className="badge bg"+(rk===0?0:rk);
     $("dBars").innerHTML=rainBars(v,p);
     const dy=d.daily;
@@ -596,6 +645,7 @@ async function loadDash(){
       rs.textContent=lv?t("l"+lv):t("st0");rs.className="badge bg"+lv;
       $("dRiver").innerHTML=riverBars(val)+`<div class="note" style="margin-top:4px">${t("avg")} ${base.toFixed(0)} m³/s → ${t("peakL")} ${peak.toFixed(0)} m³/s (${ratio.toFixed(1)}×)</div>`}
   }else{$("dRiver").innerHTML=`<p class="note">${t("dNoRiver")}</p>`;rs.textContent="";rs.className="badge"}
+  updateBig();
 }
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{
   const g=b.dataset.go,go=id=>$(id).scrollIntoView({behavior:"smooth",block:"start"}),mw=document.querySelector(".mapwrap");
@@ -603,9 +653,11 @@ document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{
     map.panTo({lat:C[curP][2],lng:C[curP][3]});map.setZoom(9);mw.scrollIntoView({behavior:"smooth"})}
   else if(g==="radar"){const c=$("l-radar");if(!c.checked){c.checked=true;c.dispatchEvent(new Event("change"))}mw.scrollIntoView({behavior:"smooth"})}
   else if(g==="fc")go("secFc");
-  else if(g==="route"){go("secRoute");$("rTo").focus({preventScroll:true})}
+  else if(g==="route"){$("dRoute").open=true;go("secRoute");$("rTo").focus({preventScroll:true})}
   else if(g==="tel")go("secTel");
   else if(g==="src")go("secSrc")});
+$("aLoc").onclick=()=>$("locate").click();
+$("aGoogle").onclick=()=>{const n=nm(C[curP]);window.open("https://www.google.com/maps/search/"+encodeURIComponent(lang==="th"?"น้ำท่วมจังหวัด"+n:"flood "+n+" province"),"_blank","noopener")};
 loadDash();lastDash=Date.now();
 
 let lastRain=0,lastFlood=0;
