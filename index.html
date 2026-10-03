@@ -68,7 +68,6 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
       <label><input type="checkbox" id="l-quake" checked><span class="dot" style="background:var(--quake)"></span><span data-t="quake"></span><span class="src">USGS<br><span data-t="world"></span></span></label>
       <label><input type="checkbox" id="l-rain" checked><span class="dot" style="background:var(--rain)"></span><span data-t="rain"></span><span class="src">Open-Meteo<br><span data-t="th"></span></span></label>
       <label><input type="checkbox" id="l-flood" checked><span class="dot" style="background:var(--flood)"></span><span data-t="flood"></span><span class="src">Open-Meteo<br><span data-t="th"></span></span></label>
-      <label><input type="checkbox" id="l-rep" checked><span class="dot" style="background:var(--help)"></span><span data-t="reps"></span><span class="src" data-t="shared"></span></label>
     </div>
     <div class="form" style="margin-top:6px">
       <button id="locate" data-t="locate"></button>
@@ -77,21 +76,6 @@ button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
       <button class="sec" id="saveKey" data-t="keyBtn"></button>
     </div>
     <div class="note" id="st" style="margin-top:6px"></div>
-
-    <h2 data-t="report"></h2>
-    <div class="form">
-      <select id="rtype"><option value="power" data-t="power"></option><option value="help" data-t="help"></option><option value="flood" data-t="floodR"></option><option value="fire" data-t="fireR"></option></select>
-      <button class="sec" id="pick" data-t="pick"></button>
-      <input id="rplace" data-p="place" maxlength="120">
-      <textarea id="rnote" rows="2" data-p="detail" maxlength="300"></textarea>
-      <input class="hp" id="web" tabindex="-1" autocomplete="off" aria-hidden="true">
-      <button id="rsend" data-t="send"></button>
-    </div>
-    <p class="note" id="rhint"></p>
-    <p class="note" id="me"></p>
-
-    <h2 data-t="latest"></h2>
-    <div id="replist"></div>
 
     <h2 data-t="emerg"></h2>
     <div class="tel">
@@ -120,7 +104,7 @@ report:"แจ้งเหตุ",power:"ไฟฟ้าดับ",help:"ขอ�
 hint0:"ยังไม่ได้เลือกตำแหน่ง",hintPick:"แตะบนแผนที่เพื่อปักหมุด",hintSel:"เลือกตำแหน่งแล้ว",hintNeed:"กรุณาเลือกตำแหน่งก่อนส่ง",sent:"ส่งแล้ว ทุกคนเห็นรายงานนี้",savedLocal:"เชื่อมระบบกลางไม่ได้ บันทึกในเครื่องนี้เท่านั้น",wait:"ส่งถี่เกินไป กรุณารอสักครู่",user:"ผู้ใช้",you:"คุณคือผู้ใช้ #",
 latest:"รายงานล่าสุด (24 ชม.)",none:"ยังไม่มีรายงาน",emerg:"เบอร์ฉุกเฉิน",official:"ข้อมูลทางการ",
 t191:"191 ตำรวจ",t199:"199 ดับเพลิง",t1669:"1669 การแพทย์ฉุกเฉิน",t1784:"1784 ปภ.",t1129:"1129 PEA ไฟดับ",t1130:"1130 MEA ไฟดับ",
-limit:"ข้อจำกัด: ไฟดับ/ขอความช่วยเหลือมาจากรายงานผู้ใช้ ไม่ใช่ข้อมูลทางการ น้ำหลากเป็นการประมาณจากแบบจำลอง เตือนสึนามิในหน้านี้อ้างอิงข้อมูลแผ่นดินไหว USGS ไม่ใช่ประกาศทางการ กรณีฉุกเฉินให้โทรเบอร์ด้านบนและทำตามประกาศของหน่วยงานรัฐ",
+limit:"ข้อจำกัด: ไฟดับและการขอความช่วยเหลือไม่มีข้อมูลสาธารณะแบบ real time จึงไม่แสดงในหน้านี้ ให้ดูที่ PEA/MEA และหน่วยงานกู้ภัย น้ำหลากเป็นการประมาณจากแบบจำลอง เตือนสึนามิในหน้านี้อ้างอิงข้อมูลแผ่นดินไหว USGS ไม่ใช่ประกาศทางการ กรณีฉุกเฉินให้โทรเบอร์ด้านบนและทำตามประกาศของหน่วยงานรัฐ",
 upd:"อัปเดตล่าสุด",every:"รีเฟรชทุก 10 นาที",checking:"กำลังตรวจสอบ…",nowRain:"ตอนนี้ฝนกำลังตก",noRain:"ตอนนี้ยังไม่มีฝน",next3:"3 ชม.ข้างหน้า",prob:"โอกาสตก",mm:"มม.",fail:"ดึงข้อมูลไม่สำเร็จ",
 fireN:"จุดไฟใน 24 ชม. ภายในรัศมี ~25 กม.:",fireKey:"ใส่คีย์ FIRMS เพื่อนับจุดไฟตรงนี้ (ดูจุดสีแดง/ส้มบนแผนที่ได้เลย)",
 tsuT:"⚠ แจ้งเตือน: แผ่นดินไหวที่อาจก่อสึนามิ (24 ชม.ล่าสุด)",tsuOK:"แผ่นดินไหว: ไม่พบเหตุขนาดใหญ่ใกล้ทะเลใน 24 ชม.",tsuNote:"ข้อมูลจาก USGS ไม่ใช่ประกาศทางการ ตรวจสอบ",mag:"ขนาด",
@@ -134,7 +118,7 @@ report:"Report an incident",power:"Power outage",help:"Need help",floodR:"Floodi
 hint0:"No location selected",hintPick:"Tap the map to drop a pin",hintSel:"Location selected",hintNeed:"Choose a location first",sent:"Sent — everyone can see this report",savedLocal:"Server unreachable; saved on this device only",wait:"Too many reports, please wait",user:"User",you:"You are user #",
 latest:"Latest reports (24h)",none:"No reports yet",emerg:"Emergency numbers (Thailand)",official:"Official sources",
 t191:"191 Police",t199:"199 Fire",t1669:"1669 Medical",t1784:"1784 Disaster (DDPM)",t1129:"1129 PEA outage",t1130:"1130 MEA outage",
-limit:"Limits: outage/help data are user reports, not official. Flood trend is a model estimate. Tsunami notice here is derived from USGS earthquake data, not an official warning. In an emergency call the numbers above and follow government announcements.",
+limit:"Limits: power-outage and help-request data have no public real-time source, so they are not shown here; check PEA/MEA and rescue agencies. Flood trend is a model estimate. Tsunami notice here is derived from USGS earthquake data, not an official warning. In an emergency call the numbers above and follow government announcements.",
 upd:"Updated",every:"refresh every 10 min",checking:"Checking…",nowRain:"Raining now",noRain:"No rain right now",next3:"Next 3h",prob:"chance",mm:"mm",fail:"Could not fetch data",
 fireN:"Fire detections in 24h within ~25 km:",fireKey:"Add a FIRMS key to count fires here (red/orange dots are visible on the map)",
 tsuT:"⚠ ALERT: earthquake that may cause a tsunami (last 24h)",tsuOK:"Earthquakes: no large offshore event in the last 24h",tsuNote:"USGS data, not an official warning. Check",mag:"M",
@@ -146,7 +130,6 @@ function applyLang(){
   document.querySelectorAll("[data-t]").forEach(e=>e.textContent=t(e.dataset.t));
   document.querySelectorAll("[data-p]").forEach(e=>e.placeholder=t(e.dataset.p));
   $("lang").textContent=lang==="th"?"EN":"ไทย";document.title=t("title");
-  if(!picked)$("rhint").textContent=t("hint0");
 }
 
 // ===== แผนที่ =====
@@ -160,7 +143,7 @@ const BASE={
 let curBase=BASE.sat.addTo(map);
 $("base").onchange=e=>{map.removeLayer(curBase);curBase=BASE[e.target.value].addTo(map)};
 
-const G={radar:L.layerGroup(),sat:L.layerGroup(),fire:L.layerGroup(),quake:L.layerGroup(),rain:L.layerGroup(),flood:L.layerGroup(),rep:L.layerGroup(),lab:L.layerGroup()};
+const G={radar:L.layerGroup(),sat:L.layerGroup(),fire:L.layerGroup(),quake:L.layerGroup(),rain:L.layerGroup(),flood:L.layerGroup(),lab:L.layerGroup()};
 G.fire.addLayer(L.tileLayer("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_Thermal_Anomalies_375m_All/default/default/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png",{...TO,maxNativeZoom:8,maxZoom:19,zIndex:9,attribution:"NASA GIBS/FIRMS"}));
 Object.keys(G).forEach(k=>{const c=$("l-"+k);if(!c){G[k].addTo(map);return}
   c.checked&&G[k].addTo(map);c.onchange=e=>e.target.checked?G[k].addTo(map):map.removeLayer(G[k])});
@@ -267,58 +250,16 @@ $("locate").onclick=()=>{
 $("saveKey").onclick=()=>{try{localStorage.setItem("firmsKey",$("firmsKey").value.trim())}catch(e){}};
 try{$("firmsKey").value=localStorage.getItem("firmsKey")||""}catch(e){}
 
-// ===== รายงานจากประชาชน (เก็บที่เซิร์ฟเวอร์ ทุกคนอ่านได้) =====
-const LBL=()=>({power:t("power"),help:t("help"),flood:t("floodR"),fire:t("fireR")});
-function devId(){
-  let v="";try{v=localStorage.getItem("did")||""}catch(e){}
-  if(!/^[0-9a-f-]{36}$/.test(v)){const m=document.cookie.match(/did=([0-9a-f-]{36})/);
-    v=m?m[1]:(crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c=="x"?r:r&3|8).toString(16)}))}
-  try{localStorage.setItem("did",v)}catch(e){}
-  document.cookie="did="+v+";max-age=31536000;path=/;SameSite=Strict;Secure";return v}
-let reps=[],picked=null,pickMode=false,pin=null,last=0;
-async function loadReps(){
-  try{const r=await fetch(API,{cache:"no-store"});if(!r.ok)throw 0;reps=(await r.json()).reports||[]}
-  catch(e){try{reps=JSON.parse(localStorage.getItem("reps")||"[]")}catch(_){reps=[]}}
-  const cut=Date.now()-864e5;reps=reps.filter(r=>r.t>cut).sort((a,b)=>b.t-a.t);
-  G.rep.clearLayers();const L_=LBL();
-  reps.forEach(r=>mkDot([r.lat,r.lon],COL[r.type]||"#888",9,`<b>${L_[r.type]||""}</b><br>${esc(r.place)}<br>${esc(r.note)}<br><small>${t("user")} #${esc(r.u||"-")} · ${new Date(r.t).toLocaleString(loc())}</small>`).addTo(G.rep));
-  $("replist").innerHTML=reps.length?reps.slice(0,25).map((r,i)=>`<div class="item" data-i="${i}"><span class="dot" style="background:${COL[r.type]||"#888"}"></span> <b>${L_[r.type]||""}</b> ${esc(r.place)}<small>${esc(r.note)} · ${t("user")} #${esc(r.u||"-")} · ${new Date(r.t).toLocaleTimeString(loc())}</small></div>`).join(""):`<span class="note">${t("none")}</span>`;
-  document.querySelectorAll(".item").forEach(e=>e.onclick=()=>{const r=reps[+e.dataset.i];map.setView([r.lat,r.lon],12)});
-}
-$("pick").onclick=()=>{pickMode=true;$("rhint").textContent=t("hintPick")};
-map.on("click",e=>{
-  if(!pickMode){queryPoint(e.latlng);return}
-  pickMode=false;picked=e.latlng;pin&&map.removeLayer(pin);pin=L.marker(e.latlng).addTo(map);
-  $("rhint").textContent=`${t("hintSel")} (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`;
-});
-$("rsend").onclick=async()=>{
-  if(!picked){$("rhint").textContent=t("hintNeed");return}
-  if(Date.now()-last<20000){$("rhint").textContent=t("wait");return}
-  const r={type:$("rtype").value,lat:picked.lat,lon:picked.lng,place:$("rplace").value.trim(),note:$("rnote").value.trim(),dev:devId(),website:$("web").value};
-  try{
-    const res=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(r)});
-    if(res.status===429){$("rhint").textContent=t("wait");return}
-    if(!res.ok)throw 0;const j=await res.json();
-    $("rhint").textContent=t("sent");if(j.u)$("me").textContent=t("you")+j.u;
-  }catch(e){
-    let l=[];try{l=JSON.parse(localStorage.getItem("reps")||"[]")}catch(_){}
-    l.push({type:r.type,lat:r.lat,lon:r.lon,place:r.place.slice(0,120),note:r.note.slice(0,300),t:Date.now()});
-    try{localStorage.setItem("reps",JSON.stringify(l.slice(-100)))}catch(_){}
-    $("rhint").textContent=t("savedLocal");
-  }
-  last=Date.now();pin&&map.removeLayer(pin);pin=null;picked=null;$("rplace").value="";$("rnote").value="";
-  loadReps();
-};
+map.on("click",e=>queryPoint(e.latlng));
 
 // ===== เริ่มทำงาน =====
 $("lang").onclick=()=>{lang=lang==="th"?"en":"th";try{localStorage.setItem("lang",lang)}catch(e){}applyLang();drawLabels();refresh()};
 async function refresh(){
-  await Promise.all([loadSat(),loadRain(),loadFlood(),loadQuake(),loadReps()]);
+  await Promise.all([loadSat(),loadRain(),loadFlood(),loadQuake()]);
   $("stamp").textContent=t("upd")+" "+new Date().toLocaleTimeString(loc())+" · "+t("every");
 }
 applyLang();drawLabels();labVis();refresh();
-setInterval(refresh,REFRESH_MS);setInterval(loadReps,30000);
-const dm=document.cookie.match(/did=/);
+setInterval(refresh,REFRESH_MS);
 </script>
 </body>
 </html>
